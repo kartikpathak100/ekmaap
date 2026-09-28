@@ -1,0 +1,29 @@
+# docker compose up -d   ->  API + officer app on http://localhost:8000 , API docs on /docs
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ekmaap
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ekmaap}
+      POSTGRES_DB: ekmaap
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro   # applied on first start only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ekmaap"]
+      interval: 5s
+      retries: 10
+  api:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      EKMAAP_DATABASE_URL: postgresql+psycopg://ekmaap:${POSTGRES_PASSWORD:-ekmaap}@db:5432/ekmaap
+      EKMAAP_SECRET_KEY: ${EKMAAP_SECRET_KEY:?set EKMAAP_SECRET_KEY in .env}
+      EKMAAP_ADMIN_LOGIN: ${EKMAAP_ADMIN_LOGIN:-admin}
+      EKMAAP_ADMIN_PASSWORD: ${EKMAAP_ADMIN_PASSWORD:?set EKMAAP_ADMIN_PASSWORD in .env}
+    volumes:
+      - store:/data/store
+    ports: ["8000:8000"]
+volumes:
+  pgdata:
+  store:

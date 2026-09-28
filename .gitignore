@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+data/
+models/
+reports/
+*.joblib
+*.pt
+.pytest_cache/
+ekmaap_mat.pdf

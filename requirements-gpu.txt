@@ -1,0 +1,2 @@
+# optional: YOLO-seg segmenter (needs PyTorch; use a GPU machine / Colab). AGPL-3.0 licensed.
+ultralytics>=8.3

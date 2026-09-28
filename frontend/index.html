@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EkMaap — officer app</title>
+<style>
+:root{--navy:#1F3864;--ink:#1E2A36;--muted:#5B6B7A;--line:#D5DDE5;--pale:#F3F6F9;--A:#1E7B45;--U:#C77C0E;--R:#B3261E;--Q:#6A3FB5}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:#EEF2F6}
+header{background:var(--navy);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+header b{font-size:17px}header span{font-size:13px;opacity:.85}
+nav{display:flex;gap:2px;background:#fff;border-bottom:1px solid var(--line);padding:0 8px;overflow-x:auto}
+nav button{border:0;background:none;padding:11px 12px;font:inherit;font-weight:600;color:var(--muted);border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+nav button.on{color:var(--navy);border-bottom-color:var(--navy)}
+main{max-width:1100px;margin:0 auto;padding:14px 16px 40px}
+.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);margin:0 0 10px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+label.f{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:3px;flex:1;min-width:140px}
+input,select{font:inherit;padding:8px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;min-width:0}
+.btn{font:inherit;font-weight:600;border:1px solid var(--navy);background:var(--navy);color:#fff;padding:9px 14px;border-radius:8px;cursor:pointer}
+.btn.ghost{background:#fff;color:var(--navy)}.btn.small{padding:5px 9px;font-size:13px}.btn:disabled{opacity:.45}
+.btn input[type=file]{display:none}
+table{border-collapse:collapse;width:100%;font-size:13.5px}th,td{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:middle}
+th{color:var(--muted);font-size:12px}td.n{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;padding:1px 8px;border-radius:10px;color:#fff;font-size:12px;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.stat{border-radius:8px;padding:8px;color:#fff;text-align:center}.stat b{display:block;font-size:21px}
+.msg{padding:8px 12px;border-radius:8px;margin:8px 0;font-size:14px}.err{background:#FDE7E7;color:var(--R)}.ok{background:#E3F2E8;color:var(--A)}
+img.photo{max-width:100%;border-radius:8px;border:1px solid var(--line)}
+.hash{font-family:ui-monospace,Menlo,monospace;font-size:12px;word-break:break-all}
+.note{font-size:12.5px;color:var(--muted)}
+section{display:none}section.on{display:block}
+@media(max-width:640px){.stat b{font-size:17px}}
+</style>
+</head>
+<body>
+<header><b>EkMaap officer app</b><span id="who">not signed in</span></header>
+<nav id="tabs">
+  <button data-t="lot" class="on">Grade a lot</button>
+  <button data-t="data">Dataset</button>
+  <button data-t="models">Models</button>
+  <button data-t="verify">Verify a report</button>
+</nav>
+<main>
+<div id="msg"></div>
+
+<section id="t-login" class="card">
+  <h2>Sign in</h2>
+  <div class="row"><label class="f">Login<input id="lg"></label><label class="f">Password<input id="pw" type="password"></label><button class="btn" id="bLogin">Sign in</button></div>
+</section>
+
+<section id="t-lot" class="on">
+  <div class="card">
+    <h2>1 · Lot</h2>
+    <div class="row">
+      <label class="f">Centre<select id="centre"></select></label>
+      <label class="f">Lot code<input id="lotCode" placeholder="LOT-0001"></label>
+      <label class="f">Variety<input id="variety" placeholder="red"></label>
+      <button class="btn" id="bLot">Create lot</button>
+    </div>
+    <div class="row" style="margin-top:8px"><label class="f">…or open a recent lot<select id="recent"></select></label><button class="btn ghost" id="bOpen">Open</button></div>
+  </div>
+  <div class="card" id="lotCard" hidden>
+    <h2>2 · Photos of the sample <span class="note" id="lotTitle"></span></h2>
+    <p class="note">Spread the sample on the printed mat, one layer, all four corner markers visible, phone straight above.</p>
+    <label class="btn">📷 Add photo<input id="inPhoto" type="file" accept="image/*" capture="environment"></label>
+    <div id="photos"></div>
+  </div>
+  <div class="card" id="gradeCard" hidden>
+    <h2>3 · Lot result (active rule set)</h2>
+    <div id="grade"></div>
+    <div class="row" style="margin-top:10px"><button class="btn" id="bIssue">Issue report</button><span id="issued"></span></div>
+  </div>
+</section>
+
+<section id="t-data">
+  <div class="card">
+    <h2>Add training photos</h2>
+    <p class="note">Photos for training and testing the models (not linked to a lot). Use a capture day as the group so a whole day lands in the same split.</p>
+    <div class="row"><label class="f">Group (e.g. 2026-10-02-market)<input id="grp"></label><label class="btn">Upload photos<input id="inData" type="file" accept="image/*" multiple></label></div>
+    <div id="dataOut" class="note" style="margin-top:8px"></div>
+  </div>
+  <div class="card">
+    <h2>Dataset</h2>
+    <div class="row"><button class="btn ghost" id="bList">Refresh</button><button class="btn ghost" id="bSplit">Assign splits</button><button class="btn ghost" id="bExport">Download dataset (.zip)</button></div>
+    <p class="note">Label outlines in CVAT (import prelabels, correct, export COCO 1.0) and upload the COCO file here.</p>
+    <div class="row"><label class="btn ghost">Import COCO labels<input id="inCoco" type="file" accept=".json"></label></div>
+    <div id="dataset" style="margin-top:8px"></div>
+  </div>
+</section>
+
+<section id="t-models">
+  <div class="card"><h2>Registered models</h2><div id="models"></div></div>
+  <div class="card"><h2>Evaluate the active models</h2>
+    <div class="row"><label class="f">Split<select id="evSplit"><option>test</option><option>val</option></select></label><button class="btn" id="bEval">Run evaluation</button></div>
+    <div id="evalOut" style="margin-top:8px"></div></div>
+</section>
+
+<section id="t-verify">
+  <div class="card"><h2>Verify a report</h2>
+    <p class="note">Enter the fingerprint printed under the QR code, or load the report record and the photos.</p>
+    <div class="row"><label class="f">Fingerprint (SHA-256)<input id="vSha"></label><button class="btn" id="bVsha">Look up</button></div>
+    <div class="row" style="margin-top:8px"><label class="f">Record (.json)<input id="vRec" type="file" accept=".json"></label><label class="f">Photos<input id="vImg" type="file" accept="image/*" multiple></label><button class="btn" id="bVrec">Verify</button></div>
+    <div id="vOut" style="margin-top:8px"></div></div>
+</section>
+</main>
+<script>
+'use strict';
+const API = '/api/v1', $ = id => document.getElementById(id);
+let token = sessionStorage.getItem('ek_token') || '', me = null, lot = null;
+const GC = {'Grade A': 'var(--A)', URS: 'var(--U)', Reject: 'var(--R)', Review: 'var(--Q)'};
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+function say(t, ok) { $('msg').innerHTML = t ? `<div class="msg ${ok ? 'ok' : 'err'}">${esc(t)}</div>` : ''; }
+async function api(path, opt = {}) {
+  opt.headers = Object.assign({}, opt.headers || {}, token ? {Authorization: 'Bearer ' + token} : {});
+  if (opt.json !== undefined) { opt.body = JSON.stringify(opt.json); opt.headers['Content-Type'] = 'application/json'; opt.method = opt.method || 'POST'; }
+  const r = await fetch(API + path, opt);
+  if (r.status === 401 && path !== '/auth/login') { token = ''; sessionStorage.removeItem('ek_token'); showLogin(); throw new Error('Please sign in'); }
+  const ct = r.headers.get('content-type') || '';
+  const body = ct.includes('json') ? await r.json() : await r.blob();
+  if (!r.ok) { const d = body.detail; throw new Error(typeof d === 'string' ? d : d && d.message ? d.message : JSON.stringify(d)); }
+  return body;
+}
+const guard = f => async (...a) => { try { say(''); await f(...a); } catch (e) { say(e.message); } };
+function showLogin() { $('t-login').classList.add('on'); document.querySelectorAll('main section:not(#t-login)').forEach(s => s.classList.remove('on')); }
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+  if (!token) return showLogin();
+  document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('main section').forEach(s => s.classList.toggle('on', s.id === 't-' + b.dataset.t));
+  ({data: listData, models: listModels})[b.dataset.t]?.();
+});
+$('bLogin').onclick = guard(async () => {
+  const r = await api('/auth/login', {json: {login: $('lg').value, password: $('pw').value}});
+  token = r.token; sessionStorage.setItem('ek_token', token); await start();
+});
+async function start() {
+  me = await api('/auth/me');
+  $('who').textContent = `${me.name} · ${me.role}`;
+  $('t-login').classList.remove('on'); $('t-lot').classList.add('on');
+  const cs = await api('/centres');
+  $('centre').innerHTML = cs.map(c => `<option value="${c.id}" ${c.id === me.centre_id ? 'selected' : ''}>${esc(c.code)} — ${esc(c.name)}</option>`).join('');
+  const ls = await api('/lots?limit=30');
+  $('recent').innerHTML = ls.map(l => `<option value="${l.id}">${esc(l.lot_code)} · ${l.status}</option>`).join('');
+}
+$('bLot').onclick = guard(async () => { const l = await api('/lots', {json: {lot_code: $('lotCode').value.trim(), centre_id: $('centre').value, variety: $('variety').value || null}}); await openLot(l.id); });
+$('bOpen').onclick = guard(async () => { if ($('recent').value) await openLot($('recent').value); });
+async function openLot(id) {
+  lot = await api('/lots/' + id);
+  $('lotCard').hidden = $('gradeCard').hidden = false;
+  $('lotTitle').textContent = `${lot.lot_code} · ${lot.status}`;
+  $('photos').innerHTML = '';
+  for (const p of lot.photos) await showPhoto(p.id);
+  await showGrade();
+}
+$('inPhoto').onchange = guard(async e => {
+  const f = e.target.files[0]; if (!f) return;
+  const fd = new FormData(); fd.append('photo', f);
+  say('Analysing…', true);
+  const a = await api(`/lots/${lot.id}/photos`, {method: 'POST', body: fd});
+  say(`${a.detections.length} onions found${a.scale_found ? '' : ' — MAT NOT FOUND: sizes unknown, retake with all 4 markers visible'}`, a.scale_found);
+  await showPhoto(a.photo_id, a); await showGrade(); e.target.value = '';
+});
+async function showPhoto(pid, a) {
+  a = a || await api(`/photos/${pid}/analysis`);
+  const img = URL.createObjectURL(await api(`/photos/${pid}/annotated.jpg`));
+  const div = document.createElement('div'); div.style.marginTop = '12px';
+  div.innerHTML = `<img class="photo" src="${img}" alt="annotated photo">
+   <p class="note">Mat: ${a.scale_found ? a.calibration_quality : 'not found'} · ${a.detections.length} onions · ${a.timing_ms?.total ?? '?'} ms</p>
+   <table><thead><tr><th>#</th><th>Model says</th><th class="n">mm</th><th>Officer decision</th></tr></thead><tbody>
+   ${a.detections.map(d => `<tr><td>${d.idx}</td><td><span class="chip" style="background:${GC[d.grade]}">${esc(d.label)}</span> <span class="note">${esc(d.condition)} ${Math.round(100 * Math.max(...Object.values(d.proba)))}%</span></td>
+     <td class="n">${d.diameter_mm ?? '—'}</td>
+     <td><select data-d="${d.id}">${['sound', 'sprouted', 'damaged', 'rotten'].map(c => `<option ${((d.review && d.review.condition) || d.condition) === c ? 'selected' : ''}>${c}</option>`).join('')}</select>
+     <button class="btn small ${d.review ? 'ghost' : ''}" data-save="${d.id}">${d.review ? 'Saved ✓' : d.needs_review ? 'Confirm (needed)' : 'Confirm'}</button></td></tr>`).join('')}</tbody></table>`;
+  div.querySelectorAll('[data-save]').forEach(b => b.onclick = guard(async () => {
+    const cond = div.querySelector(`select[data-d="${b.dataset.save}"]`).value;
+    await api(`/detections/${b.dataset.save}/reviews`, {json: {condition: cond}});
+    b.textContent = 'Saved ✓'; b.classList.add('ghost'); await showGrade();
+  }));
+  $('photos').appendChild(div);
+}
+async function showGrade() {
+  const g = await api(`/lots/${lot.id}/grade`), s = g.summary;
+  $('grade').innerHTML = `<div class="stats">${['Grade A', 'URS', 'Reject', 'Review'].map(k => `<div class="stat" style="background:${GC[k]}"><b>${s.pct[k].toFixed(1)}%</b>${k} · ${s.counts[k]}</div>`).join('')}</div>
+   <p class="note">${s.count} onions · by count · rule set <b>${esc(g.rule_set.version)}</b>${s.counts.Review ? ' · decide every “Needs review” onion before issuing' : ''}</p>`;
+}
+$('bIssue').onclick = guard(async () => {
+  const r = await api(`/lots/${lot.id}/reports`, {json: {}});
+  const pdf = URL.createObjectURL(await api(`/reports/${r.id}/pdf`));
+  $('issued').innerHTML = `<a class="btn ghost" href="${pdf}" download="report_${esc(lot.lot_code)}.pdf">Download PDF</a> <span class="hash">${r.record_sha256}</span>`;
+  say('Report issued. Fingerprint shown next to the button.', true);
+});
+// dataset
+$('inData').onchange = guard(async e => {
+  let n = 0;
+  for (const f of e.target.files) { const fd = new FormData(); fd.append('photo', f); if ($('grp').value) fd.append('split_group', $('grp').value); try { await api('/dataset/photos', {method: 'POST', body: fd}); n++; } catch (err) { say(f.name + ': ' + err.message); } }
+  $('dataOut').textContent = `${n} photos uploaded.`; e.target.value = ''; listData();
+});
+const listData = guard(async () => {
+  const ps = await api('/dataset/photos');
+  $('dataset').innerHTML = `<table><thead><tr><th>Photo</th><th>Split</th><th>Group</th><th class="n">Labels</th><th></th></tr></thead><tbody>${ps.map(p => `<tr><td>${esc(p.original_name)}</td><td>${p.split}</td><td>${esc(p.split_group || '')}</td><td class="n">${p.annotations}</td><td><button class="btn small ghost" data-pre="${p.id}">Prelabel</button></td></tr>`).join('')}</tbody></table>`;
+  $('dataset').querySelectorAll('[data-pre]').forEach(b => b.onclick = guard(async () => { const r = await api(`/photos/${b.dataset.pre}/prelabel?save=true`, {method: 'POST'}); say(`${r.annotations} suggested outlines saved — check them in CVAT before training`, true); listData(); }));
+});
+$('bList').onclick = listData;
+$('bSplit').onclick = guard(async () => { const r = await api('/dataset/split', {json: {}}); say('Assigned: ' + JSON.stringify(r.assigned), true); listData(); });
+$('bExport').onclick = guard(async () => { const b = await api('/dataset/export'); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'ekmaap_dataset.zip'; a.click(); });
+$('inCoco').onchange = guard(async e => { const fd = new FormData(); fd.append('coco_file', e.target.files[0]); const r = await api('/dataset/import', {method: 'POST', body: fd}); say(`Labels imported for ${r.photos_updated} photos; unmatched: ${r.unmatched_files.length}`, true); listData(); });
+// models
+const listModels = guard(async () => {
+  const ms = await api('/models');
+  $('models').innerHTML = ms.length ? `<table><thead><tr><th>Kind</th><th>Backend</th><th>Version</th><th>Active</th><th></th></tr></thead><tbody>${ms.map(m => `<tr><td>${m.kind}</td><td>${m.backend}</td><td>${esc(m.version)}</td><td>${m.is_active ? '✓' : ''}</td><td>${m.is_active ? '' : `<button class="btn small ghost" data-act="${m.id}">Activate</button>`}</td></tr>`).join('')}</tbody></table>` : '<p class="note">None registered: the classical segmenter and starting heuristics are used. Register trained files with POST /api/v1/models (see docs/training.md).</p>';
+  $('models').querySelectorAll('[data-act]').forEach(b => b.onclick = guard(async () => { await api(`/models/${b.dataset.act}/activate`, {method: 'POST'}); listModels(); }));
+});
+$('bEval').onclick = guard(async () => {
+  say('Evaluating… this can take a minute', true);
+  const r = await api('/evaluations', {json: {split: $('evSplit').value}}), m = r.metrics, f = v => v == null ? '—' : (+v).toFixed(3);
+  $('evalOut').innerHTML = `<table><tbody>
+   <tr><td>Photos</td><td>${r.n_photos}</td></tr>
+   <tr><td>Onions truth / found / missed / extra</td><td>${m.detection.truth} / ${m.detection.tp} / ${m.detection.fn} / ${m.detection.fp}</td></tr>
+   <tr><td>Size error vs ruler (n)</td><td>${f(m.size.vs_ruler_mae_mm)} mm (${m.size.n_ruler})</td></tr>
+   <tr><td>Condition accuracy</td><td>${f(m.condition.accuracy)}</td></tr>
+   <tr><td>Grade A % error per photo</td><td>${f(m.lot.grade_a_pct_mae)} points</td></tr>
+   <tr><td>Sent to review</td><td>${m.review.onions_sent_to_review}</td></tr></tbody></table>`; say('');
+});
+// verify (public endpoints)
+$('bVsha').onclick = guard(async () => { const r = await api('/verify/' + $('vSha').value.trim()); $('vOut').innerHTML = r.found ? `<div class="msg ok">Issued report for lot ${esc(r.lot)} at ${esc(r.issued_at)} — status <b>${r.status}</b></div>` : '<div class="msg err">No report with this fingerprint.</div>'; });
+$('bVrec').onclick = guard(async () => {
+  const fd = new FormData(); fd.append('record', $('vRec').files[0]); for (const f of $('vImg').files) fd.append('photos', f);
+  const r = await api('/verify', {method: 'POST', body: fd});
+  $('vOut').innerHTML = `<div class="msg ${r.issued && r.unchanged ? 'ok' : 'err'}">${r.issued ? (r.unchanged ? 'Record matches an issued report (' + r.status + ')' : 'Changed after issue') : 'No issued report has this fingerprint — the record was changed or never issued'}</div>` +
+    r.photos.map(p => `<div class="msg ${p.in_record ? 'ok' : 'err'}">${esc(p.file)}: ${p.in_record ? 'same photo as in the report' : 'NOT a photo from this report'}</div>`).join('');
+});
+if (token) start().catch(() => showLogin()); else showLogin();
+</script>
+</body>
+</html>
