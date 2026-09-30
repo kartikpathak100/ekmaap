@@ -1,0 +1,190 @@
+{
+ "batch": {
+  "mixed": {
+   "images": 20,
+   "truth": 220,
+   "matched": 220,
+   "missed": 0,
+   "extra": 0,
+   "absErrSum": 69.54050395539309,
+   "errSum": 67.87221390720856,
+   "sized": 220,
+   "maxErr": 2.0223502377800173,
+   "condOK": 220,
+   "labelOK": 220,
+   "review": 0,
+   "cardFound": 20,
+   "sizeMAE": 0.3160931997972413,
+   "sizeBias": 0.30851006321458435,
+   "medianMs": 280.69999999995343
+  },
+  "touching": {
+   "images": 20,
+   "truth": 200,
+   "matched": 200,
+   "missed": 0,
+   "extra": 0,
+   "absErrSum": 51.84533268476348,
+   "errSum": 11.28482370936202,
+   "sized": 200,
+   "maxErr": 1.6016780972535472,
+   "condOK": 200,
+   "labelOK": 200,
+   "review": 0,
+   "cardFound": 20,
+   "sizeMAE": 0.2592266634238174,
+   "sizeBias": 0.05642411854681009,
+   "medianMs": 343.39999999990687
+  }
+ },
+ "knn": {
+  "n": 110,
+  "tested": 110,
+  "scheme": "leave-one-photo-out (10 photos)",
+  "accuracy": 1,
+  "heuristicAgreement": 1,
+  "per": [
+   {
+    "cond": "sound",
+    "n": 70,
+    "recall": 1,
+    "precision": 1
+   },
+   {
+    "cond": "sprouted",
+    "n": 10,
+    "recall": 1,
+    "precision": 1
+   },
+   {
+    "cond": "damaged",
+    "n": 10,
+    "recall": 1,
+    "precision": 1
+   },
+   {
+    "cond": "rotten",
+    "n": 20,
+    "recall": 1,
+    "precision": 1
+   }
+  ],
+  "synthetic": 110
+ },
+ "report": {
+  "hash": "1b38160d88d00b7de4e1e4f72837687d0388eceddee2382289bc0433c3c9c10f",
+  "good": [
+   true,
+   true
+  ],
+  "tamperedNumber": [
+   false,
+   true
+  ],
+  "tamperedImage": [
+   true,
+   false
+  ]
+ },
+ "knnUnseen": {
+  "n": 110,
+  "condOK": 110,
+  "review": 0,
+  "mode": "kNN"
+ },
+ "errors": [],
+ "sizeByCondition": {
+  "sprouted": {
+   "n": 20,
+   "mae": 0.37999290910832817,
+   "bias": 0.37999290910832817,
+   "max": 0.7029958027604408
+  },
+  "sound": {
+   "n": 140,
+   "mae": 0.17281546390876787,
+   "bias": 0.16224381591742004,
+   "max": 0.4093899658661968
+  },
+  "rotten": {
+   "n": 40,
+   "mae": 0.17612510442019486,
+   "bias": 0.17141862118529935,
+   "max": 0.4029174407000937
+  },
+  "damaged": {
+   "n": 20,
+   "mae": 1.5350738324595625,
+   "bias": 1.5350738324595625,
+   "max": 2.0223502377800173
+  }
+ },
+ "stress": {
+  "none": {
+   "truth": 110,
+   "matched": 110,
+   "extra": 0,
+   "absErr": 55.36933686983122,
+   "sized": 110,
+   "condOK": 110,
+   "labelOK": 110,
+   "review": 0,
+   "card": 10,
+   "sizeMAE": 0.5033576079075566
+  },
+  "blur 2px": {
+   "truth": 110,
+   "matched": 110,
+   "extra": 0,
+   "absErr": 84.38793100642954,
+   "sized": 110,
+   "condOK": 110,
+   "labelOK": 110,
+   "review": 0,
+   "card": 10,
+   "sizeMAE": 0.7671630091493594
+  },
+  "dim light (70%)": {
+   "truth": 110,
+   "matched": 110,
+   "extra": 0,
+   "absErr": 40.07371619717155,
+   "sized": 110,
+   "condOK": 110,
+   "labelOK": 110,
+   "review": 0,
+   "card": 10,
+   "sizeMAE": 0.36430651088337773
+  },
+  "warm light": {
+   "truth": 110,
+   "matched": 110,
+   "extra": 0,
+   "absErr": 40.495651326490965,
+   "sized": 110,
+   "condOK": 110,
+   "labelOK": 110,
+   "review": 0,
+   "card": 10,
+   "sizeMAE": 0.36814228478628147
+  },
+  "bright (130%)": {
+   "truth": 110,
+   "matched": 110,
+   "extra": 0,
+   "absErr": 48.94281735938093,
+   "sized": 110,
+   "condOK": 110,
+   "labelOK": 110,
+   "review": 0,
+   "card": 10,
+   "sizeMAE": 0.4449347032670994
+  }
+ },
+ "noCard": {
+  "scale": "none",
+  "count": 11,
+  "review": 7,
+  "gradeA": 0
+ }
+}

@@ -14,20 +14,28 @@ An officer photographs the onion sample on a printed mat. EkMaap finds every oni
 | [Database schema](docs/database.md) | 15 tables, ER diagram, rules the schema enforces; DDL in [db/schema.sql](db/schema.sql) |
 | [API endpoints](docs/api.md) | 45 endpoints, roles, the main flows; [openapi.json](docs/openapi.json) |
 | [How to train](docs/training.md) | photo protocol, labelling in CVAT, training, evaluation, deploying models |
+| [Final project report](report/EkMaap_SIH26031_Final_Report.pdf) | the full write-up: requirements, architecture, ML approach, testing, feasibility, field validation plan |
+| [Pitch deck](presentation/SIH26031_StrataCadastre_KP_v4.pdf) | 6-slide pictorial deck (also as [.pptx](presentation/SIH26031_StrataCadastre_KP_v4.pptx)) |
 
 ## Repository map
 
 ```
-ekmaap/      the pipeline (shared by API and training): calibration, segmentation, measure, features,
-             classifier, rules, pipeline, dataset, evaluate, coco, synth (synthetic test images)
-backend/     FastAPI app: models.py (schema), routers/, services/ (engine, reports), security, storage
-frontend/    officer web app (served by the API at /)
-scripts/     make_mat, prelabel, train_segmenter, train_classifier, fit_size_calibration, evaluate,
-             coco_to_yolo, train_yolo_seg (GPU, optional), seed_demo, make_synthetic, dump_api
-db/          schema.sql (generated from backend/app/models.py)
-tests/       pytest: pipeline on synthetic photos + full API workflow on PostgreSQL
-notebooks/   Colab notebook for the optional GPU model
-demo/        the first offline HTML demo (heuristics only, kept for reference)
+ekmaap/         the pipeline (shared by API and training): calibration, segmentation, measure, features,
+                classifier, rules, pipeline, dataset, evaluate, coco, synth (synthetic test images)
+backend/        FastAPI app: models.py (schema), routers/, services/ (engine, reports), security, storage
+frontend/       officer web app (served by the API at /)
+scripts/        make_mat, prelabel, train_segmenter, train_classifier, fit_size_calibration, evaluate,
+                coco_to_yolo, train_yolo_seg (GPU, optional), seed_demo, make_synthetic, dump_api
+db/             schema.sql (generated from backend/app/models.py)
+tests/          pytest: pipeline on synthetic photos + full API workflow on PostgreSQL
+notebooks/      Colab notebook for the optional GPU model
+demo/           EkMaap_demo.html — the standalone client-side demo: 7 languages (en, hi, mr, gu, ta,
+                te, kn), accessible/boomer-friendly layout, government-portal design. Plus its own
+                test suite (test2.mjs, test3.mjs, func.mjs, shots.mjs) and test_results.json, the raw
+                numbers behind the testing section of the report. offline_demo_v0.html is the first,
+                superseded version, kept for reference.
+presentation/   the SIH pitch deck (pictorial, built from real pipeline screenshots and demo mockups)
+report/         the final project report (PDF)
 ```
 
 ## Run it
