@@ -1,0 +1,1351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#6B2748">
+<title>EkMaap Onion Grading</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: app shell. Phone = top bar + content + fixed bottom tab bar; desktop = tabs in the top bar,
+   Scan screen splits into photo (left) and lot result + onion list (right). Detail opens as a sheet. */
+:root{
+  --bg:#F3F4F1; --surface:#FFFFFF; --surface-2:#ECEEE9; --ink:#1A2220; --muted:#5C6763; --line:#D8DCD5;
+  --accent:#6B2748; --accent-ink:#FFFFFF; --accent-soft:#F4E7ED;
+  --g-a:#1F7A4A; --g-urs:#A86B12; --g-rej:#B42F2A; --g-q:#5B4BB5; --g-u:#2F6FB0; --g-s:#A86B12; --g-d:#B9531E;
+  --focus:#2F6FB0; --shadow:0 1px 2px rgba(26,34,32,.06),0 8px 24px rgba(26,34,32,.06);
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px; --gut:16px; --tabbar:64px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111513; --surface:#191E1C; --surface-2:#212725; --ink:#E6EBE8; --muted:#9BA6A1; --line:#2D3532;
+  --accent:#D790B1; --accent-ink:#22101A; --accent-soft:#35222C;
+  --g-a:#4DB883; --g-urs:#E0A84E; --g-rej:#EF6C63; --g-q:#A197F2; --g-u:#72A8E6; --g-s:#E0A84E; --g-d:#EE8A55;
+  --focus:#72A8E6; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111513; --surface:#191E1C; --surface-2:#212725; --ink:#E6EBE8; --muted:#9BA6A1; --line:#2D3532;
+  --accent:#D790B1; --accent-ink:#22101A; --accent-soft:#35222C;
+  --g-a:#4DB883; --g-urs:#E0A84E; --g-rej:#EF6C63; --g-q:#A197F2; --g-u:#72A8E6; --g-s:#E0A84E; --g-d:#EE8A55;
+  --focus:#72A8E6; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+.scan>*,.cols>*,.report>*,.rules>*,.stack>*{min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;
+  padding-bottom:calc(var(--tabbar) + env(safe-area-inset-bottom,0px))}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:.005em;margin:0;text-wrap:balance}
+h2{font-size:1.08rem}
+h3{font-size:.95rem}
+p{margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.eyebrow{font:600 .72rem/1.2 var(--f-body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1240px;margin:0 auto;padding:10px var(--gut);display:flex;align-items:center;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;margin-right:auto}
+.brand svg{flex:none}
+.brand b{font:600 1.15rem/1 var(--f-display);display:block;letter-spacing:.01em}
+.brand span{font-size:.74rem;color:var(--muted);display:block;margin-top:2px;white-space:nowrap}
+.iconbtn{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
+.iconbtn:hover{background:var(--surface-2)}
+
+/* navigation: bottom bar on phones, inline tabs on wide screens */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);
+  display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav button{border:0;background:none;height:var(--tabbar);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  font-size:.72rem;font-weight:500;color:var(--muted);cursor:pointer;position:relative}
+.nav button svg{width:22px;height:22px}
+.nav button[aria-current="page"]{color:var(--accent)}
+.nav button[aria-current="page"]::after{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
+@media (min-width:900px){
+  body{padding-bottom:0}
+  .nav{position:static;display:flex;gap:2px;border:0;padding:0;background:none}
+  .nav button{height:40px;flex-direction:row;gap:8px;padding:0 14px;border-radius:8px;font-size:.9rem}
+  .nav button svg{width:18px;height:18px}
+  .nav button:hover{background:var(--surface-2);color:var(--ink)}
+  .nav button[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+  .nav button[aria-current="page"]::after{display:none}
+}
+
+/* page */
+main{max-width:1240px;margin:0 auto;padding:20px var(--gut) 40px}
+.screen{display:none}
+.screen.on{display:block}
+.screen-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 16px;margin-bottom:16px}
+.screen-head h1{font-size:1.5rem}
+.screen-head p{color:var(--muted);max-width:62ch;font-size:.92rem}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.pad{padding:16px}
+.stack{display:grid;gap:16px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* buttons, fields */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;
+  border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:.92rem;cursor:pointer;text-decoration:none;color:var(--ink)}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.07);background:var(--accent)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:.85rem}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn svg{width:18px;height:18px;flex:none}
+.field{display:grid;gap:5px;min-width:0}
+.field>span{font-size:.8rem;font-weight:500;color:var(--muted)}
+.field input,.field select{width:100%;min-height:44px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-width:0}
+.field input[type=range]{padding:0;border:0;min-height:32px;accent-color:var(--accent)}
+.field small{font-size:.76rem;color:var(--muted)}
+.fields{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:999px;font-size:.76rem;font-weight:600;white-space:nowrap;
+  color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);border:1px solid color-mix(in srgb,var(--c) 32%,transparent)}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.k-a{--c:var(--g-a)}.k-urs{--c:var(--g-urs)}.k-rej{--c:var(--g-rej)}.k-q{--c:var(--g-q)}
+.k-u{--c:var(--g-u)}.k-s{--c:var(--g-s)}.k-d{--c:var(--g-d)}.k-r{--c:var(--g-rej)}
+.tag{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:6px;font-size:.74rem;font-weight:600;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.tag.accent{background:var(--accent-soft);color:var(--accent)}
+
+/* scan screen */
+.scan{display:grid;gap:16px}
+@media (min-width:900px){.scan{grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr);align-items:start}}
+.viewer-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 16px 12px}
+.viewer-head p{font-size:.8rem;color:var(--muted);margin-top:2px}
+.frame{position:relative;background:var(--surface-2);border-block:1px solid var(--line);aspect-ratio:4/3;max-width:100%;overflow:hidden}
+.frame canvas{display:block;width:100%;height:100%;object-fit:contain;cursor:pointer;touch-action:manipulation}
+.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:var(--muted);font-size:.9rem}
+.busy{position:absolute;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--surface) 70%,transparent);font-weight:600}
+.busy span{display:inline-flex;gap:10px;align-items:center;padding:10px 16px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.capture{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px}
+.capture .primary{grid-column:1/-1}
+@media (min-width:560px){.capture{grid-template-columns:auto auto auto;justify-content:start}.capture .primary{grid-column:auto}}
+details.settings{border-top:1px solid var(--line)}
+details.settings summary{list-style:none;cursor:pointer;padding:12px 16px;font-weight:600;font-size:.88rem;display:flex;justify-content:space-between;align-items:center}
+details.settings summary::-webkit-details-marker{display:none}
+details.settings summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
+details.settings[open] summary::after{transform:rotate(-135deg)}
+.settings-body{padding:0 16px 16px;display:grid;gap:14px}
+.guide{font-size:.82rem;color:var(--muted);background:var(--surface-2);border-radius:8px;padding:10px 12px}
+
+.result-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:14px 16px 0}
+.dist{display:flex;height:12px;margin:14px 16px 0;border-radius:6px;overflow:hidden;background:var(--surface-2)}
+.dist i{display:block;height:100%}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:14px 16px}
+.kpi{border-radius:8px;padding:10px 8px 9px;background:color-mix(in srgb,var(--c) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--c) 25%,transparent)}
+.kpi b{display:block;font:600 1.45rem/1.05 var(--f-display);color:var(--c);font-variant-numeric:tabular-nums}
+.kpi span{display:block;font-size:.72rem;line-height:1.3;color:var(--muted);margin-top:4px}
+@media (max-width:380px){.kpi b{font-size:1.2rem}}
+.facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;margin:0;padding:0 16px 16px;font-size:.84rem}
+.facts dt{color:var(--muted)}
+.facts dd{margin:0;text-align:right;min-width:0;overflow-wrap:anywhere}
+.facts .warn{color:var(--g-rej);font-weight:600}
+
+.list-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+.onions{list-style:none;margin:0;padding:0;max-height:560px;overflow:auto}
+.onions li+li{border-top:1px solid var(--line)}
+.onion{width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 16px;border:0;background:none;text-align:left;cursor:pointer}
+.onion:hover{background:var(--surface-2)}
+.onion.sel{background:var(--accent-soft)}
+.idx{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 .82rem var(--f-mono);border:2px solid var(--c);color:var(--c)}
+.onion .t{font-weight:600;font-size:.92rem}
+.onion .s{font-size:.78rem;color:var(--muted)}
+.onion .r{display:grid;justify-items:end;gap:4px}
+.onion .mm{font:500 .92rem var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(10,14,12,.42);z-index:40}
+.sheet{position:fixed;z-index:50;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;background:var(--surface);border-radius:16px 16px 0 0;
+  box-shadow:0 -8px 40px rgba(0,0,0,.25);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (min-width:900px){.sheet{left:auto;top:0;bottom:0;width:420px;max-height:none;border-radius:0}}
+.sheet-head{position:sticky;top:0;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);z-index:1}
+.sheet-head h2{font-size:1.2rem}
+.sheet-body{padding:16px;display:grid;gap:18px}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.metrics div{background:var(--surface);padding:10px 12px}
+.metrics span{display:block;font-size:.74rem;color:var(--muted)}
+.metrics b{font:600 1.05rem var(--f-display)}
+.reasons{margin:6px 0 0;padding-left:18px;font-size:.86rem;color:var(--muted)}
+.reasons li{margin:3px 0}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.seg button{min-height:42px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:.84rem;font-weight:600;cursor:pointer;text-transform:capitalize}
+.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+@media (max-width:380px){.seg{grid-template-columns:1fr 1fr}}
+.inline{display:flex;gap:8px}
+.inline input{flex:1;min-width:0;min-height:44px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+
+/* tables */
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:.74rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+td.n,th.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* rules */
+.rules{display:grid;gap:16px}
+@media (min-width:900px){.rules{grid-template-columns:1fr 1fr}}
+.section-title{display:grid;gap:3px;margin-bottom:14px}
+.section-title p{font-size:.84rem;color:var(--muted)}
+.actionbar{position:sticky;bottom:calc(var(--tabbar) + env(safe-area-inset-bottom,0px));z-index:5;margin-top:16px;padding:12px;display:flex;flex-wrap:wrap;gap:8px;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+@media (min-width:900px){.actionbar{bottom:16px}}
+pre{margin:0;background:var(--surface-2);border-radius:8px;padding:12px;font:.8rem/1.5 var(--f-mono);overflow:auto;max-height:280px}
+
+/* accuracy */
+.cols{display:grid;gap:16px}
+@media (min-width:900px){.cols{grid-template-columns:1fr 1fr}}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.tile{background:var(--surface-2);border-radius:8px;padding:10px}
+.tile b{display:block;font:600 1.35rem var(--f-display);font-variant-numeric:tabular-nums}
+.tile span{font-size:.74rem;color:var(--muted)}
+.big{font:600 2rem/1 var(--f-display);font-variant-numeric:tabular-nums}
+.note{font-size:.82rem;color:var(--muted)}
+.state-ok{color:var(--g-a);font-weight:600}.state-bad{color:var(--g-rej);font-weight:600}
+
+/* report */
+.report{display:grid;gap:16px}
+@media (min-width:900px){.report{grid-template-columns:minmax(300px,380px) minmax(0,1fr);align-items:start}}
+.doc{padding:22px}
+.doc-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:2px solid var(--ink);padding-bottom:14px}
+.doc-head h2{font-size:1.35rem}
+.doc-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 16px;margin:14px 0;font-size:.86rem}
+.doc-meta span{display:block;font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.doc img{width:100%;border-radius:6px;border:1px solid var(--line);display:block}
+.hash{font:.76rem/1.45 var(--f-mono);overflow-wrap:anywhere;color:var(--muted)}
+#qr{flex:none;width:112px;height:112px;background:#fff;padding:4px;border-radius:6px}
+#qr img,#qr canvas{width:104px!important;height:104px!important}
+.sign{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px;font-size:.8rem;color:var(--muted)}
+.sign div{border-top:1px solid var(--ink);padding-top:6px}
+.placeholder{padding:48px 20px;text-align:center;color:var(--muted)}
+
+/* about */
+.steps{counter-reset:s;list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;font-size:.92rem}
+.steps li::before{content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font:600 .82rem var(--f-mono)}
+.steps b{display:block}
+.steps span{color:var(--muted)}
+
+/* toast */
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabbar) + 16px + env(safe-area-inset-bottom,0px));z-index:60;
+  max-width:min(92vw,480px);padding:12px 16px;border-radius:10px;background:var(--ink);color:var(--bg);font-size:.88rem;box-shadow:var(--shadow)}
+@media (min-width:900px){.toast{bottom:24px}}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  .topbar,.nav,.no-print,.toast,.sheet,.scrim{display:none!important}
+  main{padding:0;max-width:none}
+  .screen{display:none!important}
+  #tab-report{display:block!important}
+  .report{display:block}
+  .panel{box-shadow:none;border:0}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15.5" fill="var(--accent)"/><ellipse cx="17" cy="17" rx="10.5" ry="11.5" fill="none" stroke="var(--accent-ink)" stroke-width="1.6" opacity=".9"/><ellipse cx="17" cy="17" rx="6" ry="7.5" fill="none" stroke="var(--accent-ink)" stroke-width="1.6" opacity=".75"/><path d="M17 5.5v4M17 24.5v4" stroke="var(--accent-ink)" stroke-width="1.6"/></svg>
+      <div><b>EkMaap</b><span>Onion quality grading · SIH26031</span></div>
+    </div>
+    <nav class="nav" id="nav" aria-label="Main">
+      <button data-t="scan" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Scan</button>
+      <button data-t="rules"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Rules</button>
+      <button data-t="accuracy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Accuracy</button>
+      <button data-t="report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Report</button>
+    </nav>
+    <button class="iconbtn" id="btnAbout" aria-label="How EkMaap works" title="How it works"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg></button>
+  </div>
+</header>
+
+<main>
+<!-- ================= SCAN ================= -->
+<section class="screen on" id="tab-scan" aria-labelledby="h-scan">
+  <h1 class="vh" id="h-scan">Scan a lot</h1>
+  <div class="scan">
+    <div class="panel">
+      <div class="viewer-head">
+        <div><h2 id="srcTitle">Lot sample</h2><p id="srcLine">No photo yet</p></div>
+        <span class="tag" id="srcTag" hidden></span>
+      </div>
+      <div class="frame">
+        <div id="emptyView" class="empty">Photograph the sample on the grading sheet with the scale card beside it.</div>
+        <canvas id="view" hidden aria-label="Photo with every onion outlined. Tap an onion for details."></canvas>
+        <div class="busy" id="busy" hidden><span>Analysing photo…</span></div>
+      </div>
+      <div class="capture">
+        <label class="btn primary" for="inCam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Take photo</label>
+        <input id="inCam" class="vh" type="file" accept="image/*" capture="environment">
+        <label class="btn" for="inFile">Upload photo</label>
+        <input id="inFile" class="vh" type="file" accept="image/*">
+        <button class="btn" id="btnSyn">Sample lot</button>
+      </div>
+      <details class="settings">
+        <summary>Capture settings</summary>
+        <div class="settings-body">
+          <p class="guide">Spread the sample in one layer on a plain light sheet. Place the printed scale card flat beside the onions. Hold the phone straight above, in daylight, without flash.</p>
+          <div class="fields">
+            <label class="field"><span>Scale card side (mm)</span><input id="setCard" type="number" step="0.5" value="50" inputmode="decimal"></label>
+            <label class="field"><span>Manual scale (px per mm)</span><input id="setManual" type="number" step="0.01" value="0" inputmode="decimal"><small>0 uses the scale card</small></label>
+            <label class="field"><span>Background sensitivity</span><input id="setChroma" type="range" min="5" max="30" value="12"></label>
+            <label class="field"><span>Dark object threshold</span><input id="setDark" type="range" min="20" max="70" value="40"></label>
+            <label class="field"><span>Sample lot</span><select id="synScenario"><option value="mixed">Mixed lot</option><option value="touching">Touching onions</option></select></label>
+            <label class="field"><span>Sample number</span><input id="synSeed" type="number" value="2" min="1" max="9999" inputmode="numeric"></label>
+          </div>
+          <div class="row"><button class="btn sm" id="btnCard">Print scale card</button></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="stack">
+      <div class="panel">
+        <div class="result-head"><h2>Lot result</h2><span class="note" id="countLine"></span></div>
+        <div class="dist" id="distBar" aria-hidden="true"></div>
+        <div class="kpis" id="kpis"></div>
+        <dl class="facts" id="facts"></dl>
+      </div>
+      <div class="panel">
+        <div class="list-head"><h2>Onions</h2><span class="note">Tap to inspect or correct</span></div>
+        <ul class="onions" id="onionList"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RULES ================= -->
+<section class="screen" id="tab-rules" aria-labelledby="h-rules">
+  <div class="screen-head"><div><h1 id="h-rules">Grading rules</h1><p>Size and condition become a grade through this rule set. When procurement norms change, publish a new version here; every report records the version it used.</p></div></div>
+  <div class="rules">
+    <div class="panel pad">
+      <div class="section-title"><h2>Rule set</h2></div>
+      <div class="fields">
+        <label class="field"><span>Name</span><input id="r_name"></label>
+        <label class="field"><span>Version</span><input id="r_version"></label>
+      </div>
+    </div>
+    <div class="panel pad">
+      <div class="section-title"><h2>Size limits</h2><p>Widest diameter, measured across the bulb.</p></div>
+      <div class="fields">
+        <label class="field"><span>Grade A minimum (mm)</span><input id="r_gradeA_min_mm" type="number" step="1" inputmode="decimal"></label>
+        <label class="field"><span>URS minimum (mm)</span><input id="r_urs_min_mm" type="number" step="1" inputmode="decimal"><small>Below this: Reject</small></label>
+      </div>
+    </div>
+    <div class="panel pad">
+      <div class="section-title"><h2>Condition to grade</h2><p>The worse of the size grade and the condition grade applies.</p></div>
+      <div class="fields">
+        <label class="field"><span>Damaged</span><select id="r_map_damaged"><option>Grade A</option><option>URS</option><option>Reject</option></select></label>
+        <label class="field"><span>Sprouted</span><select id="r_map_sprouted"><option>Grade A</option><option>URS</option><option>Reject</option></select></label>
+        <label class="field"><span>Rotten</span><select id="r_map_rotten"><option>Grade A</option><option>URS</option><option>Reject</option></select></label>
+      </div>
+    </div>
+    <div class="panel pad">
+      <div class="section-title"><h2>Detection thresholds</h2><p>Used until the classifier is trained on your labels.</p></div>
+      <div class="fields">
+        <label class="field"><span>Rotten: dark area at least</span><input id="r_rot_dark_frac" type="number" step="0.005"></label>
+        <label class="field"><span>Sprouted: green area at least</span><input id="r_sprout_green_frac" type="number" step="0.005"></label>
+        <label class="field"><span>Damaged: solidity below</span><input id="r_damage_solidity" type="number" step="0.005"></label>
+        <label class="field"><span>Damaged: exposed flesh at least</span><input id="r_damage_pale_frac" type="number" step="0.005"></label>
+        <label class="field"><span>Review band (± of a threshold)</span><input id="r_review_band" type="number" step="0.05"></label>
+      </div>
+    </div>
+    <div class="panel pad">
+      <div class="section-title"><h2>Learning from corrections</h2><p>Officer corrections train a nearest-neighbour classifier on this device.</p></div>
+      <div class="fields">
+        <label class="field"><span>Neighbours (k)</span><input id="r_knn_k" type="number" step="1" min="1"></label>
+        <label class="field"><span>Examples needed per condition</span><input id="r_knn_min_per_class" type="number" step="1" min="1"></label>
+        <label class="field"><span>Send to review below vote share</span><input id="r_knn_review_below" type="number" step="0.05"></label>
+      </div>
+    </div>
+    <div class="panel pad">
+      <details><summary class="eyebrow" style="cursor:pointer">Rule set as recorded in reports</summary><pre id="rulesJson" style="margin-top:10px"></pre></details>
+    </div>
+  </div>
+  <div class="actionbar no-print">
+    <button class="btn primary" id="btnApplyRules">Apply and re-grade</button>
+    <button class="btn" id="btnResetRules">Restore defaults</button>
+    <button class="btn" id="btnExportRules">Download rule set</button>
+  </div>
+</section>
+
+<!-- ================= ACCURACY ================= -->
+<section class="screen" id="tab-accuracy" aria-labelledby="h-acc">
+  <div class="screen-head"><div><h1 id="h-acc">Accuracy</h1><p>Every correction an officer makes becomes a training label. Measure the classifier on photos it has not seen, and check sizes against a ruler.</p></div></div>
+  <div class="cols">
+    <div class="panel pad stack">
+      <div class="section-title" style="margin:0"><h2>Training labels</h2><p>Labels live on this device. Download them to keep them.</p></div>
+      <div id="exSummary"></div>
+      <div class="row">
+        <button class="btn sm" id="btnExportEx">Download labels</button>
+        <label class="btn sm" for="inEx">Load labels</label><input id="inEx" class="vh" type="file" accept="application/json,.json">
+        <button class="btn sm" id="btnClearEx">Clear labels</button>
+      </div>
+      <p class="note" id="clearConfirm" hidden>Clear all labels on this device? <button class="btn sm" id="btnClearYes">Clear</button> <button class="btn sm" id="btnClearNo">Keep</button></p>
+    </div>
+    <div class="panel pad stack">
+      <div class="section-title" style="margin:0"><h2>Ruler check</h2><p>Enter ruler diameters in an onion's detail sheet; the error appears here.</p></div>
+      <div id="sizeEval"></div>
+    </div>
+    <div class="panel pad stack">
+      <div class="section-title" style="margin:0"><h2>Classifier accuracy</h2><p>Each label is predicted by a model that never saw it. With labels from two or more photos, whole photos are held out.</p></div>
+      <div><button class="btn primary" id="btnEval">Run evaluation</button></div>
+      <div id="evalOut"></div>
+    </div>
+    <div class="panel pad stack">
+      <div class="section-title" style="margin:0"><h2>Sample lot check</h2><p>For sample lots the true size and condition of every onion are known, so the result can be compared onion by onion.</p></div>
+      <div id="gtOut"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= REPORT ================= -->
+<section class="screen" id="tab-report" aria-labelledby="h-rep">
+  <div class="screen-head no-print"><div><h1 id="h-rep">Quality report</h1><p>Issue a report for the lot. It carries a SHA-256 fingerprint of the photo and of the record, so any later change is detectable.</p></div></div>
+  <div class="report">
+    <div class="stack no-print">
+      <div class="panel pad stack">
+        <h2>Lot details</h2>
+        <div class="fields" style="grid-template-columns:1fr">
+          <label class="field"><span>Lot ID</span><input id="lotId" placeholder="LOT-0001" autocomplete="off"></label>
+          <label class="field"><span>Procurement centre</span><input id="lotCentre" placeholder="Centre name"></label>
+          <label class="field"><span>Officer</span><input id="lotOfficer" placeholder="Name"></label>
+          <label class="field"><span>Farmer or seller</span><input id="lotFarmer" placeholder="Name"></label>
+        </div>
+        <div class="row"><button class="btn sm" id="btnGps">Add location</button><span class="note" id="gpsOut">No location added</span></div>
+        <button class="btn primary" id="btnReport">Issue report</button>
+        <div class="row">
+          <button class="btn sm" id="btnPrint" disabled>Print or save PDF</button>
+          <button class="btn sm" id="btnDlRecord" disabled>Download record</button>
+          <button class="btn sm" id="btnDlImg" disabled>Download photo</button>
+        </div>
+      </div>
+      <div class="panel pad stack">
+        <div class="section-title" style="margin:0"><h2>Verify a report</h2><p>Load a record and the photo it was made from. Both fingerprints are recomputed on this device.</p></div>
+        <label class="field"><span>Record (.json)</span><input id="vRec" type="file" accept=".json,application/json"></label>
+        <label class="field"><span>Photo</span><input id="vImg" type="file" accept="image/*"></label>
+        <button class="btn" id="btnVerify">Verify</button>
+        <div id="verifyOut"></div>
+      </div>
+    </div>
+    <div class="panel" id="reportDoc"><div class="placeholder">The issued report appears here.</div></div>
+  </div>
+</section>
+
+<!-- ================= ABOUT ================= -->
+<section class="screen" id="tab-about" aria-labelledby="h-about">
+  <div class="screen-head"><div><h1 id="h-about">How EkMaap works</h1><p>From one photo to a verifiable grade. All processing runs on this device; nothing is uploaded.</p></div></div>
+  <div class="cols">
+    <div class="panel pad">
+      <ol class="steps">
+        <li><div><b>Learn the sheet</b><span>The colour of the grading sheet is read from the photo edges.</span></div></li>
+        <li><div><b>Find every onion</b><span>Pixels that differ from the sheet are grouped into objects; specks are removed and holes filled.</span></div></li>
+        <li><div><b>Set the scale</b><span>The printed card's known side gives millimetres per pixel.</span></div></li>
+        <li><div><b>Separate touching onions</b><span>A distance map finds each bulb's centre and splits the blob at the narrow contact.</span></div></li>
+        <li><div><b>Measure</b><span>Neck, roots and sprouts are trimmed; the widest diameter is reported in mm.</span></div></li>
+        <li><div><b>Read the surface</b><span>Share of dark (rot, mould), green (sprout) and pale (exposed flesh) area, and outline solidity (cuts, splits).</span></div></li>
+        <li><div><b>Decide the condition</b><span>Thresholds at first, then a classifier trained on officer corrections. Uncertain onions go to the officer.</span></div></li>
+        <li><div><b>Apply the rule set</b><span>Size and condition give Grade A, URS or Reject; lot percentages follow.</span></div></li>
+        <li><div><b>Issue the report</b><span>Photo and record fingerprints (SHA-256), time and location, verifiable by anyone.</span></div></li>
+      </ol>
+    </div>
+    <div class="stack">
+      <div class="panel pad stack">
+        <h2>Photographing a sample</h2>
+        <p class="note">One layer of onions on a plain light sheet, not stacked. Scale card flat on the same sheet and fully visible. Phone held straight above. Daylight or diffuse light, no flash. For white onions, use a darker sheet.</p>
+      </div>
+      <div class="panel pad stack">
+        <h2>Scope</h2>
+        <p class="note">Percentages are by count of onions photographed. A photo shows one side of each bulb; internal rot is confirmed by the officer's cut test, as today. Grade limits come from the active rule set.</p>
+      </div>
+      <div class="panel pad"><button class="btn" id="btnBackScan">Back to scanning</button></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="sheet-head"><h2 id="sheetTitle">Onion</h2><button class="iconbtn" id="sheetClose" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="sheet-body" id="sheetBody"></div>
+</aside>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+<script>
+'use strict';
+const EK = window.EK = {};
+const $ = id => document.getElementById(id);
+const LABELS = {
+  A: {name: 'Grade A', color: '#1F7A4A', key: 'a'}, U: {name: 'Undersized', color: '#2F6FB0', key: 'u'},
+  S: {name: 'Sprouted', color: '#B7791F', key: 's'}, D: {name: 'Damaged', color: '#C4561F', key: 'd'},
+  R: {name: 'Rotten', color: '#B42F2A', key: 'r'}, Q: {name: 'Needs review', color: '#5B4BB5', key: 'q'}
+};
+const GRADE_KEY = {'Grade A': 'a', 'URS': 'urs', 'Reject': 'rej', 'Review': 'q'};
+const GRADE_RANK = {'Grade A': 0, 'URS': 1, 'Reject': 2};
+const CONDS = ['sound', 'sprouted', 'damaged', 'rotten'];
+const FEATURES = ['medianL', 'meanA', 'meanB', 'stdL', 'darkFrac', 'greenFrac', 'paleFrac', 'solidity', 'roundness'];
+
+const DEFAULT_RULES = {
+  name: 'Default rule set - 2026 procurement norms',
+  version: 'ekmaap-2026.1',
+  gradeA_min_mm: 45, urs_min_mm: 35,
+  map_damaged: 'URS', map_sprouted: 'Reject', map_rotten: 'Reject',
+  rot_dark_frac: 0.08, sprout_green_frac: 0.015, damage_solidity: 0.93, damage_pale_frac: 0.10,
+  review_band: 0.2,
+  knn_k: 5, knn_min_per_class: 3, knn_review_below: 0.6
+};
+let rules = JSON.parse(JSON.stringify(DEFAULT_RULES));
+const settings = {cardMM: 50, manualPxPerMm: 0, chromaT: 12, darkT: 40, maxDim: 1200, splitFrac: 0.5, splitSolidity: 0.9};
+const state = {img: null, W: 0, H: 0, lab: null, source: null, fileName: null, imageHash: null, imageBytes: null,
+  imageType: null, synthetic: null, result: null, selected: -1, examples: [], ruler: {}, gps: null, record: null};
+EK.state = state; EK.settings = settings; EK.getRules = () => rules;
+
+/* ---------------- utilities ---------------- */
+function median(arr) { const a = Float64Array.from(arr).sort(); const n = a.length; return n ? (n % 2 ? a[(n - 1) / 2] : (a[n / 2 - 1] + a[n / 2]) / 2) : 0; }
+function quantile(arr, q) { const a = Float64Array.from(arr).sort(); if (!a.length) return 0; const i = Math.min(a.length - 1, Math.max(0, Math.round(q * (a.length - 1)))); return a[i]; }
+function r3(x) { return x == null || !isFinite(x) ? null : Math.round(x * 1000) / 1000; }
+function r1(x) { return x == null || !isFinite(x) ? null : Math.round(x * 10) / 10; }
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c])); }
+function canonical(v) {
+  if (Array.isArray(v)) return '[' + v.map(canonical).join(',') + ']';
+  if (v && typeof v === 'object') return '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + canonical(v[k])).join(',') + '}';
+  return JSON.stringify(v);
+}
+async function sha256Hex(data) {
+  const buf = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+  const h = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function download(name, text, type = 'application/json') {
+  const blob = text instanceof Blob ? text : new Blob([text], {type});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+/* ---------------- colour: sRGB -> CIE Lab (D65) ---------------- */
+const LIN = new Float32Array(256);
+for (let i = 0; i < 256; i++) { const c = i / 255; LIN[i] = c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+function toLab(img) {
+  const n = img.width * img.height, d = img.data;
+  const L = new Float32Array(n), A = new Float32Array(n), B = new Float32Array(n);
+  const f = t => t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116;
+  for (let i = 0; i < n; i++) {
+    const r = LIN[d[4 * i]], g = LIN[d[4 * i + 1]], b = LIN[d[4 * i + 2]];
+    const fx = f((r * 0.4124 + g * 0.3576 + b * 0.1805) / 0.95047), fy = f(r * 0.2126 + g * 0.7152 + b * 0.0722), fz = f((r * 0.0193 + g * 0.1192 + b * 0.9505) / 1.08883);
+    L[i] = 116 * fy - 16; A[i] = 500 * (fx - fy); B[i] = 200 * (fy - fz);
+  }
+  return {L, a: A, b: B};
+}
+
+/* ---------------- binary morphology (square kernel, integral image) ---------------- */
+function morph(m, W, H, r, op) {
+  const W1 = W + 1, I = new Int32Array(W1 * (H + 1));
+  for (let y = 0; y < H; y++) { let row = 0; for (let x = 0; x < W; x++) { row += m[y * W + x]; I[(y + 1) * W1 + x + 1] = I[y * W1 + x + 1] + row; } }
+  const o = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) {
+    const y0 = Math.max(0, y - r), y1 = Math.min(H - 1, y + r);
+    for (let x = 0; x < W; x++) {
+      const x0 = Math.max(0, x - r), x1 = Math.min(W - 1, x + r);
+      const s = I[(y1 + 1) * W1 + x1 + 1] - I[y0 * W1 + x1 + 1] - I[(y1 + 1) * W1 + x0] + I[y0 * W1 + x0];
+      o[y * W + x] = op === 'd' ? (s > 0 ? 1 : 0) : (s === (x1 - x0 + 1) * (y1 - y0 + 1) ? 1 : 0);
+    }
+  }
+  return o;
+}
+const erode = (m, W, H, r) => morph(m, W, H, r, 'e');
+const dilate = (m, W, H, r) => morph(m, W, H, r, 'd');
+function fillHoles(m, W, H) {
+  const seen = new Uint8Array(W * H), st = new Int32Array(W * H); let sp = 0;
+  const push = i => { if (!m[i] && !seen[i]) { seen[i] = 1; st[sp++] = i; } };
+  for (let x = 0; x < W; x++) { push(x); push((H - 1) * W + x); }
+  for (let y = 0; y < H; y++) { push(y * W); push(y * W + W - 1); }
+  while (sp) { const p = st[--sp], x = p % W; if (x > 0) push(p - 1); if (x < W - 1) push(p + 1); if (p >= W) push(p - W); if (p < W * (H - 1)) push(p + W); }
+  for (let i = 0; i < W * H; i++) if (!m[i] && !seen[i]) m[i] = 1;
+  return m;
+}
+function components(m, W, H) {
+  const lab = new Int32Array(W * H), st = new Int32Array(W * H), comps = []; let n = 0;
+  for (let i = 0; i < W * H; i++) {
+    if (!m[i] || lab[i]) continue;
+    n++; let sp = 0; st[sp++] = i; lab[i] = n; const px = [];
+    while (sp) {
+      const p = st[--sp]; px.push(p); const x = p % W;
+      if (x > 0 && m[p - 1] && !lab[p - 1]) { lab[p - 1] = n; st[sp++] = p - 1; }
+      if (x < W - 1 && m[p + 1] && !lab[p + 1]) { lab[p + 1] = n; st[sp++] = p + 1; }
+      if (p >= W && m[p - W] && !lab[p - W]) { lab[p - W] = n; st[sp++] = p - W; }
+      if (p < W * (H - 1) && m[p + W] && !lab[p + W]) { lab[p + W] = n; st[sp++] = p + W; }
+    }
+    comps.push(px);
+  }
+  return {lab, comps};
+}
+
+/* ---------------- geometry ---------------- */
+function convexHull(pts) {
+  pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+  const lo = [], up = [];
+  for (const p of pts) { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i]; while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  up.pop(); lo.pop(); return lo.concat(up);
+}
+function polyArea(h) { let s = 0; for (let i = 0; i < h.length; i++) { const a = h[i], b = h[(i + 1) % h.length]; s += a[0] * b[1] - b[0] * a[1]; } return Math.abs(s) / 2; }
+function hullStats(h) {
+  let maxF = 0;
+  for (let i = 0; i < h.length; i++) for (let j = i + 1; j < h.length; j++) { const d = Math.hypot(h[i][0] - h[j][0], h[i][1] - h[j][1]); if (d > maxF) maxF = d; }
+  let minW = Infinity, rect = null;
+  for (let i = 0; i < h.length; i++) {
+    const a = h[i], b = h[(i + 1) % h.length]; const len = Math.hypot(b[0] - a[0], b[1] - a[1]); if (!len) continue;
+    const ux = (b[0] - a[0]) / len, uy = (b[1] - a[1]) / len;
+    let u0 = Infinity, u1 = -Infinity, v0 = Infinity, v1 = -Infinity;
+    for (const p of h) { const u = p[0] * ux + p[1] * uy, v = -p[0] * uy + p[1] * ux; if (u < u0) u0 = u; if (u > u1) u1 = u; if (v < v0) v0 = v; if (v > v1) v1 = v; }
+    const w = v1 - v0, l = u1 - u0;
+    if (w < minW) minW = w;
+    if (!rect || w * l < rect.area) rect = {area: w * l, a: Math.max(w, l), b: Math.min(w, l)};
+  }
+  return {maxF, minW, rect};
+}
+// Region measurement from a list of pixel indices.
+function regionGeom(px, W, H) {
+  let x0 = W, y0 = H, x1 = 0, y1 = 0, sx = 0, sy = 0;
+  for (const p of px) { const x = p % W, y = (p - x) / W; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; sx += x; sy += y; }
+  const bw = x1 - x0 + 1, bh = y1 - y0 + 1, sub = new Uint8Array(bw * bh);
+  for (const p of px) { const x = p % W, y = (p - x) / W; sub[(y - y0) * bw + (x - x0)] = 1; }
+  const pts = [];
+  for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) {
+    const i = y * bw + x; if (!sub[i]) continue;
+    if (x === 0 || y === 0 || x === bw - 1 || y === bh - 1 || !sub[i - 1] || !sub[i + 1] || !sub[i - bw] || !sub[i + bw]) {
+      pts.push([x, y], [x + 1, y], [x, y + 1], [x + 1, y + 1]);
+    }
+  }
+  const hull = convexHull(pts), hullArea = polyArea(hull), hs = hullStats(hull);
+  return {x0, y0, bw, bh, sub, area: px.length, cx: sx / px.length, cy: sy / px.length, hull, hullArea,
+    solidity: px.length / Math.max(1, hullArea), maxF: hs.maxF, minW: hs.minW, rect: hs.rect,
+    touchesEdge: x0 === 0 || y0 === 0 || x1 === W - 1 || y1 === H - 1};
+}
+// Chamfer (3-4) distance transform inside a sub-mask.
+function distTransform(sub, bw, bh) {
+  const INF = 1e9, d = new Float32Array(bw * bh);
+  for (let i = 0; i < d.length; i++) d[i] = sub[i] ? INF : 0;
+  const g = (x, y) => (x < 0 || y < 0 || x >= bw || y >= bh) ? 0 : d[y * bw + x];
+  for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) { const i = y * bw + x; if (!d[i]) continue;
+    d[i] = Math.min(d[i], g(x - 1, y) + 3, g(x, y - 1) + 3, g(x - 1, y - 1) + 4, g(x + 1, y - 1) + 4); }
+  for (let y = bh - 1; y >= 0; y--) for (let x = bw - 1; x >= 0; x--) { const i = y * bw + x; if (!d[i]) continue;
+    d[i] = Math.min(d[i], g(x + 1, y) + 3, g(x, y + 1) + 3, g(x + 1, y + 1) + 4, g(x - 1, y + 1) + 4); }
+  return d;
+}
+// Split a blob of touching onions. Cores = pixels far from the blob edge (tried at several depths);
+// cores are grown back over the blob in order of decreasing distance (watershed), so the cut falls at
+// the narrow contact. A split is kept only if every part is a clean convex shape and the cut is short.
+function heapPush(h, v, i) { h.push([v, i]); let k = h.length - 1; while (k > 0) { const pk = (k - 1) >> 1; if (h[pk][0] >= h[k][0]) break; [h[pk], h[k]] = [h[k], h[pk]]; k = pk; } }
+function heapPop(h) { const top = h[0], last = h.pop(); if (h.length) { h[0] = last; let k = 0; for (;;) { const l = 2 * k + 1, r = l + 1; let m = k; if (l < h.length && h[l][0] > h[m][0]) m = l; if (r < h.length && h[r][0] > h[m][0]) m = r; if (m === k) break; [h[m], h[k]] = [h[k], h[m]]; k = m; } } return top; }
+function splitRegion(g, W, H, minArea) {
+  const {sub, bw, bh, x0, y0} = g, d = distTransform(sub, bw, bh);
+  let mx = 0; for (const v of d) if (v > mx) mx = v;
+  let best = null;
+  for (const frac of [0.6, 0.5, 0.4, 0.3]) {
+    const core = new Uint8Array(bw * bh); for (let i = 0; i < d.length; i++) core[i] = d[i] >= frac * mx ? 1 : 0;
+    const seeds = components(core, bw, bh).comps.filter(c => c.length >= Math.max(12, 0.005 * g.area));
+    if (seeds.length < 2 || (best && seeds.length <= best.length)) continue;
+    const own = new Int32Array(bw * bh), heap = [];
+    const nbrs = p => { const x = p % bw; return [x > 0 ? p - 1 : -1, x < bw - 1 ? p + 1 : -1, p >= bw ? p - bw : -1, p < bw * (bh - 1) ? p + bw : -1]; };
+    seeds.forEach((c, k) => { for (const p of c) own[p] = k + 1; });
+    seeds.forEach(c => { for (const p of c) for (const n of nbrs(p)) if (n >= 0 && sub[n] && !own[n]) heapPush(heap, d[n], n); });
+    while (heap.length) {
+      const [, p] = heapPop(heap); if (own[p]) continue;
+      let lab = 0; for (const n of nbrs(p)) if (n >= 0 && own[n]) { lab = own[n]; break; }
+      if (!lab) continue; own[p] = lab;
+      for (const n of nbrs(p)) if (n >= 0 && sub[n] && !own[n]) heapPush(heap, d[n], n);
+    }
+    const parts = seeds.map(() => []), cutPts = [];
+    for (let i = 0; i < own.length; i++) {
+      if (!own[i]) continue; const x = i % bw, y = (i - x) / bw; parts[own[i] - 1].push((y + y0) * W + (x + x0));
+      if ((x < bw - 1 && own[i + 1] && own[i + 1] !== own[i]) || (y < bh - 1 && own[i + bw] && own[i + bw] !== own[i])) cutPts.push([x, y]);
+    }
+    // cut length = longest straight distance along the cut line(s)
+    const cut = cutPts.length > 1 ? hullStats(convexHull(cutPts)).maxF : cutPts.length;
+    const geoms = parts.map(pp => regionGeom(pp, W, H));
+    const minEqD = Math.min(...geoms.map(q => 2 * Math.sqrt(q.area / Math.PI)));
+    const ok = geoms.every(q => q.area >= 0.5 * minArea && q.solidity >= 0.9) && (seeds.length > 2 || cut <= 0.75 * minEqD);
+    if (ok) best = parts;
+  }
+  return best;
+}
+// Remove thin appendages (neck, roots, sprout) before measuring size.
+function bodyDiameter(g) {
+  const {sub, bw, bh} = g;
+  const eqR = Math.sqrt(g.area / Math.PI), r = Math.max(1, Math.round(0.15 * eqR));
+  const pad = r + 1, PW = bw + 2 * pad, PH = bh + 2 * pad, p = new Uint8Array(PW * PH);
+  for (let y = 0; y < bh; y++) for (let x = 0; x < bw; x++) p[(y + pad) * PW + x + pad] = sub[y * bw + x];
+  const op = dilate(erode(p, PW, PH, r), PW, PH, r);
+  const cc = components(op, PW, PH); if (!cc.comps.length) return {maxF: g.maxF, minW: g.minW, trimmed: false};
+  let big = cc.comps[0]; for (const c of cc.comps) if (c.length > big.length) big = c;
+  const bg = regionGeom(big, PW, PH);
+  // ellipse with the same second moments as the trimmed body: less sensitive to small leftovers (root tuft)
+  let sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0; const n = big.length;
+  for (const q of big) { const x = q % PW, y = (q - x) / PW; sx += x; sy += y; sxx += x * x; syy += y * y; sxy += x * y; }
+  const mx = sx / n, my = sy / n, cxx = sxx / n - mx * mx + 1 / 12, cyy = syy / n - my * my + 1 / 12, cxy = sxy / n - mx * my;
+  const tr = cxx + cyy, det = cxx * cyy - cxy * cxy, disc = Math.sqrt(Math.max(0, tr * tr / 4 - det));
+  let major = 4 * Math.sqrt(tr / 2 + disc), minor = 4 * Math.sqrt(Math.max(0, tr / 2 - disc)), method = 'ellipse';
+  // a cut or split removes flesh but not diameter: for dented outlines, fit the ellipse to the convex hull instead
+  if (bg.solidity < 0.95) { const e = polyEllipse(bg.hull); if (e) { major = e.major; minor = e.minor; method = 'hull-ellipse'; } }
+  return {maxF: major, minW: minor, feret: bg.maxF, method, trimmed: true};
+}
+function polyEllipse(h) {
+  let A = 0, cx = 0, cy = 0, ixx = 0, iyy = 0, ixy = 0;
+  for (let i = 0; i < h.length; i++) {
+    const [x0, y0] = h[i], [x1, y1] = h[(i + 1) % h.length], c = x0 * y1 - x1 * y0;
+    A += c / 2; cx += (x0 + x1) * c / 6; cy += (y0 + y1) * c / 6;
+    iyy += (x0 * x0 + x0 * x1 + x1 * x1) * c / 12; ixx += (y0 * y0 + y0 * y1 + y1 * y1) * c / 12;
+    ixy += (x0 * y1 + 2 * x0 * y0 + 2 * x1 * y1 + x1 * y0) * c / 24;
+  }
+  if (Math.abs(A) < 1) return null;
+  const mx = cx / A, my = cy / A, cxx = iyy / A - mx * mx, cyy = ixx / A - my * my, cxy = ixy / A - mx * my;
+  const tr = cxx + cyy, det = cxx * cyy - cxy * cxy, disc = Math.sqrt(Math.max(0, tr * tr / 4 - det));
+  return {major: 4 * Math.sqrt(tr / 2 + disc), minor: 4 * Math.sqrt(Math.max(0, tr / 2 - disc))};
+}
+
+/* ---------------- colour / texture features ---------------- */
+function colourFeatures(px, lab) {
+  const Ls = new Float32Array(px.length); let sa = 0, sb = 0, sL = 0, sL2 = 0;
+  for (let k = 0; k < px.length; k++) { const i = px[k]; const L = lab.L[i]; Ls[k] = L; sa += lab.a[i]; sb += lab.b[i]; sL += L; sL2 += L * L; }
+  const n = px.length, medL = median(Ls), p75 = quantile(Ls, 0.75);
+  const darkT = Math.min(28, p75 - 18);
+  let dark = 0, green = 0, pale = 0;
+  for (let k = 0; k < n; k++) {
+    const i = px[k], L = lab.L[i], a = lab.a[i], b = lab.b[i];
+    if (L < darkT) dark++;
+    if (a < -6 && b > 4) green++;
+    if (L > 60 && L > medL + 18 && Math.hypot(a, b) < 30) pale++;
+  }
+  const meanL = sL / n;
+  return {medianL: medL, meanA: sa / n, meanB: sb / n, stdL: Math.sqrt(Math.max(0, sL2 / n - meanL * meanL)),
+    darkFrac: dark / n, greenFrac: green / n, paleFrac: pale / n};
+}
+
+/* ---------------- condition: heuristics and kNN ---------------- */
+function heuristic(f) {
+  const s = {
+    rotten: f.darkFrac / rules.rot_dark_frac,
+    sprouted: f.greenFrac / rules.sprout_green_frac,
+    damaged: Math.max((1 - f.solidity) / Math.max(1e-6, 1 - rules.damage_solidity), f.paleFrac / rules.damage_pale_frac)
+  };
+  let cond = 'sound';
+  for (const c of ['rotten', 'sprouted', 'damaged']) if (s[c] >= 1) { cond = c; break; }
+  const band = rules.review_band;
+  const borderline = Object.entries(s).filter(([, v]) => v > 1 - band && v < 1 + band).map(([k]) => k);
+  const why = [];
+  if (f.darkFrac > 0) why.push(`dark area ${(f.darkFrac * 100).toFixed(1)}% (rotten ≥ ${(rules.rot_dark_frac * 100).toFixed(1)}%)`);
+  if (f.greenFrac > 0) why.push(`green area ${(f.greenFrac * 100).toFixed(1)}% (sprouted ≥ ${(rules.sprout_green_frac * 100).toFixed(1)}%)`);
+  why.push(`solidity ${f.solidity.toFixed(3)} (damaged < ${rules.damage_solidity})`);
+  if (f.paleFrac > 0) why.push(`pale area ${(f.paleFrac * 100).toFixed(1)}% (damaged ≥ ${(rules.damage_pale_frac * 100).toFixed(1)}%)`);
+  return {cond, borderline, scores: s, why};
+}
+function featVec(f) { return FEATURES.map(k => f[k]); }
+function knnReady(examples = state.examples) {
+  const cnt = {}; for (const e of examples) cnt[e.label] = (cnt[e.label] || 0) + 1;
+  const ok = Object.values(cnt).filter(c => c >= rules.knn_min_per_class).length;
+  return ok >= 2 && examples.length >= 8;
+}
+function knnPredict(vec, examples) {
+  const d = FEATURES.length, mu = new Array(d).fill(0), sd = new Array(d).fill(0);
+  for (const e of examples) for (let j = 0; j < d; j++) mu[j] += e.f[j] / examples.length;
+  for (const e of examples) for (let j = 0; j < d; j++) sd[j] += (e.f[j] - mu[j]) ** 2 / examples.length;
+  for (let j = 0; j < d; j++) sd[j] = Math.sqrt(sd[j]) || 1;
+  const dist = examples.map(e => { let s = 0; for (let j = 0; j < d; j++) s += ((vec[j] - e.f[j]) / sd[j]) ** 2; return [Math.sqrt(s), e.label]; });
+  dist.sort((a, b) => a[0] - b[0]);
+  const k = Math.min(rules.knn_k, dist.length), votes = {};
+  for (let i = 0; i < k; i++) votes[dist[i][1]] = (votes[dist[i][1]] || 0) + 1;
+  let best = null, bv = -1; for (const [c, v] of Object.entries(votes)) if (v > bv) { bv = v; best = c; }
+  return {cond: best, conf: bv / k, votes};
+}
+function classify(o) {
+  const h = heuristic(o.f);
+  o.heuristic = h.cond;
+  if (knnReady()) {
+    const p = knnPredict(featVec(o.f), state.examples);
+    o.cond = p.cond; o.source = 'kNN'; o.conf = p.conf;
+    o.review = p.conf < rules.knn_review_below;
+    o.reasons = [`kNN on ${state.examples.length} labels: ${Object.entries(p.votes).map(([c, v]) => c + ' ' + v).join(', ')} of ${Math.min(rules.knn_k, state.examples.length)} votes`];
+    if (o.review) o.reasons.push(`vote share ${(p.conf * 100).toFixed(0)}% < ${(rules.knn_review_below * 100).toFixed(0)}% → review`);
+  } else {
+    o.cond = h.cond; o.source = 'heuristic'; o.conf = null;
+    o.review = h.borderline.length > 0;
+    o.reasons = h.why.slice();
+    if (o.review) o.reasons.push('close to a threshold (' + h.borderline.join(', ') + ') → review');
+  }
+  if (o.touchesEdge) { o.review = true; o.reasons.push('onion cut off by the photo edge → review'); }
+}
+function applyGrade(o) {
+  const sizeKnown = o.diameter_mm != null;
+  const condGrade = o.cond === 'sound' ? 'Grade A' : rules['map_' + o.cond];
+  let sizeGrade = 'Grade A';
+  if (sizeKnown) sizeGrade = o.diameter_mm >= rules.gradeA_min_mm ? 'Grade A' : o.diameter_mm >= rules.urs_min_mm ? 'URS' : 'Reject';
+  o.grade = GRADE_RANK[condGrade] >= GRADE_RANK[sizeGrade] ? condGrade : sizeGrade;
+  o.label = o.cond === 'rotten' ? 'R' : o.cond === 'sprouted' ? 'S' : o.cond === 'damaged' ? 'D' : (sizeKnown && o.diameter_mm < rules.gradeA_min_mm ? 'U' : 'A');
+  if (!sizeKnown && o.cond === 'sound') { o.review = true; if (!o.reasons.includes('no scale')) o.reasons.push('no size card found, size unknown → review'); }
+  if (o.review) { o.label = 'Q'; o.grade = 'Review'; }
+}
+
+/* ---------------- main pipeline ---------------- */
+function runPipeline() {
+  const t0 = performance.now();
+  const {W, H, img} = state;
+  const lab = state.lab || (state.lab = toLab(img));
+  // 1. sheet colour from the photo border
+  const bwid = Math.max(4, Math.round(Math.min(W, H) * 0.02)), Ls = [], As = [], Bs = [];
+  for (let y = 0; y < H; y += 2) for (let x = 0; x < W; x += 2) if (x < bwid || y < bwid || x >= W - bwid || y >= H - bwid) { const i = y * W + x; Ls.push(lab.L[i]); As.push(lab.a[i]); Bs.push(lab.b[i]); }
+  const bg = {L: median(Ls), a: median(As), b: median(Bs)};
+  // 2. object mask
+  let m = new Uint8Array(W * H);
+  for (let i = 0; i < W * H; i++) { const dC = Math.hypot(lab.a[i] - bg.a, lab.b[i] - bg.b), dL = bg.L - lab.L[i]; if (dC > settings.chromaT || dL > settings.darkT) m[i] = 1; }
+  m = dilate(erode(m, W, H, 2), W, H, 2);
+  m = erode(dilate(m, W, H, 3), W, H, 3);
+  fillHoles(m, W, H);
+  // 3. blobs
+  const minArea = Math.max(150, W * H * 0.0006);
+  const blobs = components(m, W, H).comps.filter(c => c.length >= minArea).map(px => ({px, g: regionGeom(px, W, H)}));
+  // 4. size card: dark, grey, solid, square
+  let card = null;
+  for (const b of blobs) {
+    let sL = 0, sC = 0; for (const i of b.px) { sL += lab.L[i]; sC += Math.hypot(lab.a[i], lab.b[i]); }
+    const mL = sL / b.px.length, mC = sC / b.px.length, g = b.g;
+    const rectFill = g.area / Math.max(1, g.rect.area), aspect = g.rect.b / Math.max(1, g.rect.a);
+    if (mL < 45 && mC < 18 && rectFill > 0.88 && aspect > 0.8 && g.solidity > 0.93) {
+      const score = rectFill + aspect; if (!card || score > card.score) card = {blob: b, score, side_px: Math.sqrt(g.area), meanL: mL};
+    }
+  }
+  let pxPerMm = null, scaleSource = 'none';
+  if (settings.manualPxPerMm > 0) { pxPerMm = settings.manualPxPerMm; scaleSource = 'manual'; }
+  else if (card) { pxPerMm = card.side_px / settings.cardMM; scaleSource = 'card'; }
+  // 5. onions (split touching ones)
+  const regions = [];
+  for (const b of blobs) {
+    if (card && b === card.blob) continue;
+    if (b.g.solidity < settings.splitSolidity) {
+      const parts = splitRegion(b.g, W, H, minArea);
+      if (parts) { for (const p of parts) if (p.length >= minArea * 0.5) regions.push({px: p, g: regionGeom(p, W, H), split: true}); continue; }
+    }
+    regions.push({px: b.px, g: b.g, split: false});
+  }
+  // 6. measure + describe + classify + grade
+  const olab = new Int32Array(W * H);
+  if (card) for (const i of card.blob.px) olab[i] = -1;
+  const onions = regions.map((r, k) => {
+    const g = r.g, body = bodyDiameter(g);
+    for (const i of r.px) olab[i] = k + 1;
+    const f = colourFeatures(r.px, lab);
+    f.solidity = g.solidity; f.roundness = body.minW / Math.max(1, body.maxF);
+    const o = {id: k + 1, cx: g.cx, cy: g.cy, area_px: g.area, touchesEdge: g.touchesEdge, split: r.split,
+      diameter_px: body.maxF, width_px: body.minW, f,
+      diameter_mm: pxPerMm ? body.maxF / pxPerMm : null, width_mm: pxPerMm ? body.minW / pxPerMm : null};
+    classify(o); applyGrade(o); return o;
+  });
+  // sort top-to-bottom, left-to-right for stable numbering
+  const rowH = onions.length ? Math.sqrt((W * H) / Math.max(1, onions.length)) * 0.6 : 1;
+  const order = onions.map((o, i) => i).sort((a, b) => Math.floor(onions[a].cy / rowH) - Math.floor(onions[b].cy / rowH) || onions[a].cx - onions[b].cx);
+  const remap = new Int32Array(onions.length + 1); order.forEach((oi, k) => { remap[oi + 1] = k + 1; });
+  for (let i = 0; i < olab.length; i++) if (olab[i] > 0) olab[i] = remap[olab[i]];
+  const sorted = order.map((oi, k) => { const o = onions[oi]; o.id = k + 1; return o; });
+  state.result = {bg, card: card ? {side_px: card.side_px, cx: card.blob.g.cx, cy: card.blob.g.cy} : null, pxPerMm, scaleSource,
+    onions: sorted, olab, ms: performance.now() - t0, minArea};
+  state.result.summary = summarise(sorted);
+  return state.result;
+}
+function regrade() { if (!state.result) return; for (const o of state.result.onions) { classify(o); applyGrade(o); } state.result.summary = summarise(state.result.onions); }
+function summarise(onions) {
+  const s = {count: onions.length, 'Grade A': 0, URS: 0, Reject: 0, Review: 0, labels: {}};
+  for (const o of onions) { s[o.grade]++; s.labels[o.label] = (s.labels[o.label] || 0) + 1; }
+  s.pct = {}; for (const k of ['Grade A', 'URS', 'Reject', 'Review']) s.pct[k] = s.count ? 100 * s[k] / s.count : 0;
+  return s;
+}
+
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function draw() {
+  const cv = $('view'), {W, H} = state; cv.width = W; cv.height = H; cv.hidden = false; $('emptyView').hidden = true;
+  const ctx = cv.getContext('2d'), out = new ImageData(new Uint8ClampedArray(state.img.data), W, H);
+  const res = state.result; if (!res) { ctx.putImageData(out, 0, 0); return; }
+  const {olab, onions} = res, col = onions.map(o => hexRgb(LABELS[o.label].color)), blue = [47, 111, 176];
+  const t = Math.max(2, Math.round(W / 500));
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x, v = olab[i]; if (!v) continue;
+    let edge = false;
+    for (let dy = -t; dy <= t && !edge; dy++) for (let dx = -t; dx <= t; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= W || yy >= H || olab[yy * W + xx] !== v) { edge = true; break; } }
+    if (!edge) continue;
+    const c = v < 0 ? blue : (state.selected === v ? [255, 255, 255] : col[v - 1]);
+    out.data[4 * i] = c[0]; out.data[4 * i + 1] = c[1]; out.data[4 * i + 2] = c[2];
+  }
+  ctx.putImageData(out, 0, 0);
+  const fs = Math.max(13, Math.round(W / 52));
+  ctx.font = `600 ${fs}px 'IBM Plex Sans',system-ui,Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const o of onions) {
+    const txt = `${o.id}  ${o.label === 'Q' ? '?' : o.label}` + (o.diameter_mm != null ? `  ${o.diameter_mm.toFixed(0)} mm` : '');
+    const w = ctx.measureText(txt).width + fs * 0.8;
+    ctx.fillStyle = LABELS[o.label].color; ctx.globalAlpha = 0.94;
+    roundRect(ctx, o.cx - w / 2, o.cy - fs * 0.75, w, fs * 1.5, fs * 0.4); ctx.fill();
+    ctx.globalAlpha = 1; ctx.fillStyle = '#fff'; ctx.fillText(txt, o.cx, o.cy + 1);
+  }
+  if (res.card) {
+    const txt = `scale card ${settings.cardMM} mm`; ctx.font = `600 ${Math.round(fs * 0.85)}px 'IBM Plex Sans',system-ui,Arial`;
+    const w = ctx.measureText(txt).width + fs * 0.6; ctx.fillStyle = '#2F6FB0';
+    roundRect(ctx, res.card.cx - w / 2, res.card.cy - fs * 0.6, w, fs * 1.2, fs * 0.3); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillText(txt, res.card.cx, res.card.cy + 1);
+  }
+}
+function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function evaluate(examples = state.examples) {
+  const n = examples.length; if (n < 4) return {error: 'Need at least 4 labelled onions.'};
+  const photos = [...new Set(examples.map(e => e.photo))], byPhoto = photos.length >= 2;
+  const labelsPresent = CONDS.filter(c => examples.some(e => e.label === c));
+  const cm = {}; for (const a of labelsPresent) { cm[a] = {}; for (const b of CONDS) cm[a][b] = 0; }
+  let correct = 0, tested = 0, hAgree = 0;
+  for (let i = 0; i < n; i++) {
+    const e = examples[i], train = examples.filter((x, j) => byPhoto ? x.photo !== e.photo : j !== i);
+    if (train.length < 2) continue;
+    const p = knnPredict(e.f, train); tested++;
+    cm[e.label][p.cond]++; if (p.cond === e.label) correct++;
+    const f = {}; FEATURES.forEach((k, j) => f[k] = e.f[j]);
+    if (heuristic(f).cond === e.label) hAgree++;
+  }
+  const per = labelsPresent.map(c => {
+    const tp = cm[c][c], fn = CONDS.reduce((s, b) => s + (b !== c ? cm[c][b] : 0), 0), fp = labelsPresent.reduce((s, a) => s + (a !== c ? cm[a][c] : 0), 0);
+    return {cond: c, n: tp + fn, recall: tp + fn ? tp / (tp + fn) : null, precision: tp + fp ? tp / (tp + fp) : null};
+  });
+  return {n, tested, scheme: byPhoto ? `leave-one-photo-out (${photos.length} photos)` : 'leave-one-onion-out (1 photo — optimistic)',
+    accuracy: tested ? correct / tested : null, heuristicAgreement: tested ? hAgree / tested : null, cm, per, labelsPresent,
+    synthetic: examples.filter(e => e.source === 'synthetic').length};
+}
+/* ---------------- synthetic test images ---------------- */
+function rng(seed) { let s = seed >>> 0; return () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function makeSynthetic(scenario = 'mixed', seed = 1) {
+  const R = rng(seed * 7919 + (scenario === 'touching' ? 13 : 0)), W = 1600, H = 1200, pxmm = 4;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const ctx = cv.getContext('2d');
+  const paper = [236, 234, 228];
+  const gr = ctx.createLinearGradient(0, 0, W, H); gr.addColorStop(0, 'rgb(242,240,234)'); gr.addColorStop(1, 'rgb(226,224,218)');
+  ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+  // size card: 50 mm black square, slightly rotated
+  const cardPx = settings.cardMM * pxmm, ang = (R() - 0.5) * 0.25;
+  ctx.save(); ctx.translate(70 + cardPx / 2, 70 + cardPx / 2); ctx.rotate(ang); ctx.fillStyle = '#111'; ctx.fillRect(-cardPx / 2, -cardPx / 2, cardPx, cardPx); ctx.restore();
+  const gt = [];
+  const conds = scenario === 'touching'
+    ? ['sound', 'sound', 'sound', 'sound', 'sound', 'sound', 'small', 'sound', 'rotten', 'sound']
+    : ['sound', 'sound', 'sound', 'sound', 'small', 'small', 'sprouted', 'damaged', 'rotten', 'rotten', 'sound'];
+  for (let i = conds.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [conds[i], conds[j]] = [conds[j], conds[i]]; }
+  const place = [];
+  if (scenario === 'touching') {
+    // five touching pairs, laid out in a 2 x 3 grid of slots (first slot keeps the card)
+    const slots = [[1, 0], [2, 0], [0, 1], [1, 1], [2, 1]];
+    slots.forEach(([cx, cy], k) => {
+      const sx = 60 + cx * 510, sy = 330 + cy * 420;
+      const d1 = mmFor(conds[2 * k], R, true), d2 = mmFor(conds[2 * k + 1], R, true);
+      const th = (R() - 0.5) * 0.8, gap = -0.06 * Math.min(d1, d2) * pxmm; // slight overlap = touching
+      const c1 = [sx + 250 - Math.cos(th) * (d1 * pxmm / 2 + gap / 2), sy + 190 - Math.sin(th) * (d1 * pxmm / 2)];
+      const c2 = [sx + 250 + Math.cos(th) * (d2 * pxmm / 2 + gap / 2), sy + 190 + Math.sin(th) * (d2 * pxmm / 2)];
+      place.push([c1, d1, conds[2 * k]], [c2, d2, conds[2 * k + 1]]);
+    });
+  } else {
+    let k = 0;
+    for (let gy = 0; gy < 3; gy++) for (let gx = 0; gx < 4; gx++) {
+      if (gx === 0 && gy === 0) continue;
+      const cond = conds[k++]; const d = mmFor(cond, R);
+      const cx = 200 + gx * 400 + (R() - 0.5) * 80, cy = 200 + gy * 400 + (R() - 0.5) * 60;
+      place.push([[cx, cy], d, cond]);
+    }
+  }
+  // shadows first, then bodies
+  const specs = place.map(([c, d, cond]) => {
+    const ext = d * pxmm / 2 + (cond === 'sprouted' ? d * pxmm * 0.42 : 5 * pxmm) + 12;
+    return {cx: Math.min(W - ext, Math.max(ext, c[0])), cy: Math.min(H - ext, Math.max(ext, c[1])), d, cond, aspect: 0.82 + R() * 0.13, rot: R() * Math.PI, R};
+  });
+  for (const s of specs) { ctx.save(); ctx.filter = 'blur(10px)'; ctx.fillStyle = 'rgba(60,55,50,0.28)'; ctx.beginPath(); ctx.ellipse(s.cx + 8, s.cy + 10, s.d * pxmm / 2, s.d * pxmm * s.aspect / 2, s.rot, 0, 2 * Math.PI); ctx.fill(); ctx.restore(); }
+  for (const s of specs) drawOnion(ctx, s, pxmm, paper);
+  // sensor noise
+  const id = ctx.getImageData(0, 0, W, H), d = id.data;
+  for (let i = 0; i < d.length; i += 4) { const n = (R() - 0.5) * 10; d[i] += n; d[i + 1] += n; d[i + 2] += n; }
+  ctx.putImageData(id, 0, 0);
+  for (const s of specs) {
+    const cond = s.cond === 'small' ? 'sound' : s.cond;
+    const label = cond === 'sound' ? (s.d >= rules.gradeA_min_mm ? 'A' : 'U') : cond === 'rotten' ? 'R' : cond === 'sprouted' ? 'S' : 'D';
+    gt.push({cx: s.cx, cy: s.cy, d_mm: s.d, cond, label});
+  }
+  return {canvas: cv, gt, pxPerMm: pxmm, scenario, seed};
+}
+function mmFor(cond, R, tight) { return cond === 'small' ? 27 + R() * 13 : tight ? 46 + R() * 14 : 50 + R() * 22; }
+function drawOnion(ctx, s, pxmm, paper) {
+  const a = s.d * pxmm / 2, b = a * s.aspect, R = s.R;
+  ctx.save(); ctx.translate(s.cx, s.cy); ctx.rotate(s.rot);
+  // neck (dry, brown) and root tuft
+  ctx.fillStyle = '#8a5a3c'; ctx.beginPath(); ctx.moveTo(a - 4, -b * 0.12); ctx.lineTo(a + 3.5 * pxmm, 0); ctx.lineTo(a - 4, b * 0.12); ctx.fill();
+  ctx.strokeStyle = '#c9b48f'; ctx.lineWidth = 1.5; for (let k = -3; k <= 3; k++) { ctx.beginPath(); ctx.moveTo(-a + 2, k * 3); ctx.lineTo(-a - 2.5 * pxmm, k * 5); ctx.stroke(); }
+  // body
+  const g = ctx.createRadialGradient(-a * 0.25, -b * 0.3, a * 0.1, 0, 0, a);
+  const hue = R() * 14 - 7;
+  g.addColorStop(0, `hsl(${338 + hue},45%,52%)`); g.addColorStop(0.7, `hsl(${336 + hue},50%,38%)`); g.addColorStop(1, `hsl(${334 + hue},52%,28%)`);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(0, 0, a, b, 0, 0, 2 * Math.PI); ctx.fill();
+  ctx.save(); ctx.clip();
+  ctx.strokeStyle = 'rgba(255,220,230,0.18)'; ctx.lineWidth = 2;
+  for (let k = 1; k < 7; k++) { ctx.beginPath(); ctx.ellipse(0, 0, a, b * k / 7, 0, 0, 2 * Math.PI); ctx.stroke(); }
+  if (s.cond === 'rotten') {
+    const nb = 3 + Math.floor(R() * 3);
+    for (let k = 0; k < nb; k++) {
+      const x = (R() - 0.5) * a * 1.1, y = (R() - 0.5) * b * 1.1, rr = a * (0.22 + R() * 0.2);
+      const rg = ctx.createRadialGradient(x, y, 0, x, y, rr); rg.addColorStop(0, 'rgba(22,16,12,0.97)'); rg.addColorStop(0.65, 'rgba(30,22,16,0.9)'); rg.addColorStop(1, 'rgba(40,30,20,0)');
+      ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(x, y, rr, 0, 2 * Math.PI); ctx.fill();
+    }
+  }
+  if (s.cond === 'damaged') {
+    ctx.fillStyle = 'rgb(234,212,216)'; ctx.beginPath(); ctx.ellipse(0, b * 0.55, a * 0.35, b * 0.3, 0, 0, 2 * Math.PI); ctx.fill();
+  }
+  ctx.restore();
+  if (s.cond === 'damaged') { // cut notch on the side
+    ctx.fillStyle = `rgb(${paper[0]},${paper[1]},${paper[2]})`; ctx.beginPath(); ctx.moveTo(-a * 0.3, b + 3); ctx.lineTo(0, b * 0.35); ctx.lineTo(a * 0.3, b + 3); ctx.closePath(); ctx.fill();
+  }
+  if (s.cond === 'sprouted') { // green shoot from the neck
+    const L = s.d * pxmm * 0.4, w = s.d * pxmm * 0.08;
+    ctx.fillStyle = '#5e9e3a'; ctx.strokeStyle = '#3f7426'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(a * 0.75, -w / 2); ctx.quadraticCurveTo(a + L * 0.6, -w, a + L, -w * 0.2); ctx.quadraticCurveTo(a + L * 0.6, w * 0.4, a * 0.75, w / 2); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#6fb048'; ctx.beginPath(); ctx.ellipse(a * 0.72, 0, w * 0.9, w * 0.7, 0, 0, 2 * Math.PI); ctx.fill();
+  }
+  ctx.restore();
+}
+function compareGT(res, syn) {
+  const scale = state.scaleFactor || 1, used = new Set(), rows = [];
+  for (const g of syn.gt) {
+    const gx = g.cx * scale, gy = g.cy * scale; let best = null, bd = Infinity;
+    for (const o of res.onions) { if (used.has(o.id)) continue; const d = Math.hypot(o.cx - gx, o.cy - gy); if (d < bd) { bd = d; best = o; } }
+    const tol = 0.4 * g.d_mm * syn.pxPerMm * scale;
+    if (best && bd <= tol) { used.add(best.id); rows.push({g, o: best}); } else rows.push({g, o: null});
+  }
+  const found = rows.filter(r => r.o), sized = found.filter(r => r.o.diameter_mm != null);
+  const errs = sized.map(r => r.o.diameter_mm - r.g.d_mm);
+  const condOK = found.filter(r => r.o.cond === r.g.cond).length, condHeur = found.filter(r => r.o.heuristic === r.g.cond).length;
+  const labelOK = found.filter(r => r.o.label === r.g.label).length, review = found.filter(r => r.o.label === 'Q').length;
+  return {truth: syn.gt.length, detected: res.onions.length, matched: found.length, missed: rows.length - found.length,
+    extra: res.onions.length - found.length, sizeMAE: errs.length ? errs.reduce((s, e) => s + Math.abs(e), 0) / errs.length : null,
+    sizeMaxErr: errs.length ? Math.max(...errs.map(Math.abs)) : null, sizeBias: errs.length ? errs.reduce((s, e) => s + e, 0) / errs.length : null,
+    condAgree: found.length ? condOK / found.length : null, heuristicAgree: found.length ? condHeur / found.length : null,
+    labelAgree: found.length ? labelOK / found.length : null, review, cardFound: res.scaleSource === 'card',
+    pxPerMmTrue: syn.pxPerMm * scale, pxPerMmMeasured: res.pxPerMm, rows};
+}
+function setImage(src, w, h) {
+  const s = Math.min(1, settings.maxDim / Math.max(w, h)), W = Math.round(w * s), H = Math.round(h * s);
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  x.drawImage(src, 0, 0, W, H);
+  Object.assign(state, {W, H, img: x.getImageData(0, 0, W, H), lab: null, scaleFactor: s, selected: -1, ruler: {}, record: null});
+}
+async function buildRecord() {
+  const res = state.result; if (!res) throw new Error('No scan yet');
+  const rec = {
+    app: 'EkMaap', app_version: '1.0',
+    lot: {id: $('lotId').value.trim(), centre: $('lotCentre').value.trim(), officer: $('lotOfficer').value.trim(), farmer: $('lotFarmer').value.trim()},
+    created_at: new Date().toISOString(), gps: state.gps,
+    image: {sha256: state.imageHash, file: state.fileName, source: state.source, processed_size: [state.W, state.H]},
+    scale: {source: res.scaleSource, px_per_mm: r3(res.pxPerMm), card_mm: settings.cardMM},
+    classifier: {mode: knnReady() ? 'kNN' : 'heuristic', labels: state.examples.length},
+    rules: JSON.parse(JSON.stringify(rules)),
+    summary: {count: res.summary.count, grade_a: res.summary['Grade A'], urs: res.summary.URS, reject: res.summary.Reject, review: res.summary.Review,
+      pct: Object.fromEntries(Object.entries(res.summary.pct).map(([k, v]) => [k, r1(v)]))},
+    basis: 'percentages by count of onions in the photo',
+    onions: res.onions.map(o => ({id: o.id, label: LABELS[o.label].name, grade: o.grade, condition: o.cond, decided_by: o.source,
+      vote: o.conf != null ? r3(o.conf) : null, diameter_mm: r1(o.diameter_mm), width_mm: r1(o.width_mm), review: o.review,
+      features: Object.fromEntries(FEATURES.map(k => [k, r3(o.f[k])]))}))
+  };
+  rec.record_sha256 = await sha256Hex(canonical(rec));
+  return rec;
+}
+async function verify(recText, imgBuf) {
+  let rec; try { rec = JSON.parse(recText); } catch (e) { return {ok: false, msg: 'Record is not valid JSON.'}; }
+  const claimed = rec.record_sha256; const copy = Object.assign({}, rec); delete copy.record_sha256;
+  const recHash = await sha256Hex(canonical(copy)), imgHash = imgBuf ? await sha256Hex(imgBuf) : null;
+  return {recordOK: recHash === claimed, imageOK: imgHash ? imgHash === rec.image?.sha256 : null, recHash, claimed, imgHash, imgClaimed: rec.image?.sha256};
+}
+/* ================================ UI ================================ */
+const frame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
+const pct = v => v == null ? '—' : (100 * v).toFixed(1) + '%';
+const COND_KEY = {sound: 'a', sprouted: 's', damaged: 'd', rotten: 'r'};
+function labelChip(l) { return `<span class="chip k-${LABELS[l].key}">${LABELS[l].name}</span>`; }
+function gradeChip(g) { return `<span class="chip k-${GRADE_KEY[g]}">${g}</span>`; }
+
+let toastTimer = null;
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3800);
+}
+function show(tab) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === 'tab-' + tab));
+  document.querySelectorAll('#nav button').forEach(b => b.toggleAttribute('aria-current', b.dataset.t === tab) || (b.dataset.t === tab && b.setAttribute('aria-current', 'page')));
+  document.querySelectorAll('#nav button').forEach(b => { if (b.dataset.t === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  if (tab === 'rules') fillRules();
+  if (tab === 'accuracy') renderAccuracy();
+  window.scrollTo({top: 0});
+}
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => show(b.dataset.t));
+$('btnAbout').onclick = () => show('about');
+$('btnBackScan').onclick = () => show('scan');
+
+/* ---------- loading ---------- */
+function setBusy(b) { $('busy').hidden = !b; }
+async function loadFile(file) {
+  if (!file) return;
+  setBusy(true); await frame();
+  try {
+    const buf = await file.arrayBuffer();
+    const bmp = await createImageBitmap(new Blob([buf], {type: file.type || 'image/jpeg'}));
+    setImage(bmp, bmp.width, bmp.height);
+    Object.assign(state, {source: 'photo', fileName: file.name, imageBytes: buf, imageType: file.type || 'image/jpeg', synthetic: null, imageHash: await sha256Hex(buf)});
+    runPipeline(); renderScan(); resetReport();
+  } catch (e) {
+    toast('That file could not be read as a photo. Use a JPEG or PNG.');
+  } finally { setBusy(false); }
+}
+async function loadSynthetic(scenario, seed) {
+  setBusy(true); await frame();
+  const syn = makeSynthetic(scenario, seed);
+  const blob = await new Promise(r => syn.canvas.toBlob(r, 'image/png'));
+  const buf = await blob.arrayBuffer();
+  setImage(syn.canvas, syn.canvas.width, syn.canvas.height);
+  Object.assign(state, {source: 'synthetic', fileName: `sample_${scenario}_${seed}.png`, imageBytes: buf, imageType: 'image/png', synthetic: syn, imageHash: await sha256Hex(buf)});
+  runPipeline(); renderScan(); resetReport(); setBusy(false);
+  return compareGT(state.result, syn);
+}
+$('inCam').onchange = e => { loadFile(e.target.files[0]); e.target.value = ''; };
+$('inFile').onchange = e => { loadFile(e.target.files[0]); e.target.value = ''; };
+$('btnSyn').onclick = () => loadSynthetic($('synScenario').value, parseInt($('synSeed').value) || 1);
+const reScan = () => { if (state.img) { runPipeline(); renderScan(); resetReport(); } };
+$('setCard').onchange = e => { settings.cardMM = parseFloat(e.target.value) || 50; reScan(); };
+$('setManual').onchange = e => { settings.manualPxPerMm = parseFloat(e.target.value) || 0; reScan(); };
+$('setChroma').onchange = e => { settings.chromaT = +e.target.value; reScan(); };
+$('setDark').onchange = e => { settings.darkT = +e.target.value; reScan(); };
+$('btnCard').onclick = () => {
+  const w = window.open('', '_blank');
+  if (!w) { toast('Allow pop-ups for this page to print the scale card.'); return; }
+  w.document.write(`<!doctype html><title>EkMaap scale card</title><style>@page{size:A4;margin:15mm}body{font:12pt Arial;margin:0}.sq{width:${settings.cardMM}mm;height:${settings.cardMM}mm;background:#000;margin:25mm auto 8mm}p{text-align:center;max-width:150mm;margin:4mm auto}</style>
+  <div class="sq"></div><p><b>EkMaap scale card, ${settings.cardMM} mm × ${settings.cardMM} mm</b></p><p>Print at 100% (actual size) and check the square with a ruler. If it is not ${settings.cardMM} mm, enter the measured side in Capture settings.</p><p>Place it flat on the grading sheet, fully visible.</p><script>setTimeout(()=>print(),300)<\/script>`);
+  w.document.close();
+};
+
+/* ---------- scan screen ---------- */
+function decidedBy(o) { return o.source === 'kNN' ? `Trained model · ${Math.round(o.conf * 100)}% vote` : 'Built-in rules'; }
+function renderScan() {
+  const res = state.result; if (!res) return;
+  draw();
+  const s = res.summary, syn = state.source === 'synthetic';
+  $('srcTitle').textContent = syn ? 'Sample lot' : 'Lot sample';
+  $('srcTag').hidden = false; $('srcTag').className = 'tag' + (syn ? ' accent' : '');
+  $('srcTag').textContent = syn ? 'Simulated photo' : 'Your photo';
+  $('srcLine').textContent = `${esc(state.fileName || '')} · analysed in ${res.ms.toFixed(0)} ms`;
+  $('countLine').textContent = `${s.count} onions · by count`;
+  const keys = ['Grade A', 'URS', 'Reject', 'Review'];
+  $('distBar').innerHTML = keys.map(k => s.pct[k] ? `<i class="k-${GRADE_KEY[k]}" style="width:${s.pct[k]}%;background:var(--c)"></i>` : '').join('');
+  $('kpis').innerHTML = keys.map(k => `<div class="kpi k-${GRADE_KEY[k]}"><b>${s.pct[k].toFixed(0)}%</b><span>${k === 'Review' ? 'Review' : k}<br>${s[k]} onion${s[k] === 1 ? '' : 's'}</span></div>`).join('');
+  const scale = res.scaleSource === 'card' ? `Scale card found · <span class="mono">${res.pxPerMm.toFixed(2)}</span> px/mm`
+    : res.scaleSource === 'manual' ? `Manual · <span class="mono">${res.pxPerMm.toFixed(2)}</span> px/mm` : `<span class="warn">Scale card not found</span>`;
+  $('facts').innerHTML = `<dt>Scale</dt><dd>${scale}</dd><dt>Condition model</dt><dd>${knnReady() ? `Trained on ${state.examples.length} labels` : 'Built-in rules'}</dd>
+    <dt>Rule set</dt><dd class="mono">${esc(rules.version)}</dd><dt>Grade A from</dt><dd><span class="mono">${rules.gradeA_min_mm}</span> mm</dd>`;
+  $('onionList').innerHTML = res.onions.map(o => `<li><button class="onion${state.selected === o.id ? ' sel' : ''}" data-id="${o.id}">
+    <span class="idx k-${LABELS[o.label].key}">${o.id}</span>
+    <span><span class="t">${LABELS[o.label].name}</span><br><span class="s">${o.cond} · ${decidedBy(o)}</span></span>
+    <span class="r"><span class="mm">${o.diameter_mm != null ? o.diameter_mm.toFixed(1) + ' mm' : '—'}</span>${gradeChip(o.grade)}</span></button></li>`).join('');
+  if (!$('sheet').hidden) renderSheet();
+}
+$('onionList').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (b) openSheet(+b.dataset.id); });
+$('view').addEventListener('click', e => {
+  const r = e.target.getBoundingClientRect();
+  // canvas is object-fit: contain inside the frame
+  const k = Math.min(r.width / state.W, r.height / state.H), ox = (r.width - state.W * k) / 2, oy = (r.height - state.H * k) / 2;
+  const x = Math.floor((e.clientX - r.left - ox) / k), y = Math.floor((e.clientY - r.top - oy) / k);
+  if (x < 0 || y < 0 || x >= state.W || y >= state.H) return;
+  const v = state.result && state.result.olab[y * state.W + x];
+  if (v > 0) openSheet(v);
+});
+
+/* ---------- onion sheet ---------- */
+let lastFocus = null;
+function openSheet(id) {
+  state.selected = id; lastFocus = document.activeElement;
+  $('sheet').hidden = false; $('scrim').hidden = false;
+  renderScan(); $('sheetClose').focus();
+}
+function closeSheet() {
+  $('sheet').hidden = true; $('scrim').hidden = true; state.selected = -1; renderScan();
+  if (lastFocus && lastFocus.focus) lastFocus.focus();
+}
+$('sheetClose').onclick = closeSheet; $('scrim').onclick = closeSheet;
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('sheet').hidden) closeSheet(); });
+function renderSheet() {
+  const o = state.result && state.result.onions.find(x => x.id === state.selected);
+  if (!o) { closeSheet(); return; }
+  const ex = state.examples.find(e => e.photo === state.imageHash && e.onion === o.id);
+  const current = ex ? ex.label : o.cond;
+  $('sheetTitle').textContent = `Onion ${o.id}`;
+  $('sheetBody').innerHTML = `
+    <div class="row">${labelChip(o.label)} ${gradeChip(o.grade)}</div>
+    <div class="metrics">
+      <div><span>Widest diameter</span><b class="num">${o.diameter_mm != null ? o.diameter_mm.toFixed(1) + ' mm' : '—'}</b></div>
+      <div><span>Width across</span><b class="num">${o.width_mm != null ? o.width_mm.toFixed(1) + ' mm' : '—'}</b></div>
+      <div><span>Condition</span><b style="text-transform:capitalize">${o.cond}</b></div>
+      <div><span>Decided by</span><b>${o.source === 'kNN' ? 'Trained model' : 'Built-in rules'}</b></div>
+    </div>
+    <div><h3>Why</h3><ul class="reasons">${o.reasons.map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>
+    <div><h3>Officer decision</h3><p class="note">Confirm or correct the condition. Each decision becomes a training label.</p>
+      <div class="seg" role="group" aria-label="Condition">${CONDS.map(c => `<button data-teach="${c}" aria-pressed="${ex && current === c}">${c}</button>`).join('')}</div>
+      <p class="note" style="margin-top:6px">${ex ? `Recorded as <b>${ex.label}</b>.` : 'Not yet reviewed.'}</p></div>
+    <div><h3>Ruler check</h3><p class="note">Measured diameter with a ruler or caliper.</p>
+      <div class="inline" style="margin-top:8px"><input id="rulerIn" type="number" step="0.5" inputmode="decimal" placeholder="mm" value="${state.ruler[o.id] ?? ''}" aria-label="Ruler diameter in mm"><button class="btn" id="btnRuler">Save</button></div></div>
+    <details><summary class="eyebrow" style="cursor:pointer">Measured features</summary>
+      <div class="tablewrap" style="margin-top:8px"><table><tbody>${FEATURES.map(k => `<tr><td>${k}</td><td class="n">${o.f[k].toFixed(3)}</td></tr>`).join('')}</tbody></table></div></details>`;
+  $('sheetBody').querySelectorAll('[data-teach]').forEach(b => b.onclick = () => teach(o, b.dataset.teach));
+  $('btnRuler').onclick = () => {
+    const v = parseFloat($('rulerIn').value);
+    if (isFinite(v) && v > 0) { state.ruler[o.id] = v; toast(`Ruler diameter saved for onion ${o.id}.`); } else { delete state.ruler[o.id]; }
+  };
+}
+function teach(o, label) {
+  const i = state.examples.findIndex(e => e.photo === state.imageHash && e.onion === o.id);
+  const e = {photo: state.imageHash, onion: o.id, label, f: featVec(o.f), source: state.source};
+  if (i >= 0) state.examples[i] = e; else state.examples.push(e);
+  const was = knnReady();
+  regrade(); renderScan();
+  toast(knnReady() && !was ? 'Enough labels: the trained model now grades this lot.' : `Onion ${o.id} recorded as ${label}.`);
+}
+
+/* ---------- rules ---------- */
+function fillRules() {
+  for (const k of Object.keys(DEFAULT_RULES)) { const el = $('r_' + k); if (el) el.value = rules[k]; }
+  $('rulesJson').textContent = JSON.stringify(rules, null, 2);
+}
+$('btnApplyRules').onclick = () => {
+  const next = {...rules};
+  for (const k of Object.keys(DEFAULT_RULES)) { const el = $('r_' + k); if (!el) continue; next[k] = typeof DEFAULT_RULES[k] === 'number' ? parseFloat(el.value) : el.value.trim(); }
+  if (!(next.urs_min_mm > 0) || !(next.gradeA_min_mm > 0) || next.urs_min_mm > next.gradeA_min_mm) { toast('URS minimum must be above 0 and not larger than the Grade A minimum.'); return; }
+  rules = next; fillRules(); regrade(); renderScan(); resetReport(); toast(`Rule set ${rules.version} applied. The lot was re-graded.`);
+};
+$('btnResetRules').onclick = () => { rules = JSON.parse(JSON.stringify(DEFAULT_RULES)); fillRules(); regrade(); renderScan(); resetReport(); toast('Default rule set restored.'); };
+$('btnExportRules').onclick = () => download(`ekmaap_rules_${rules.version}.json`, JSON.stringify(rules, null, 2));
+
+/* ---------- accuracy ---------- */
+function renderAccuracy() { renderExamples(); renderSizeEval(); renderGT(); }
+function renderExamples() {
+  const cnt = {}; for (const e of state.examples) cnt[e.label] = (cnt[e.label] || 0) + 1;
+  const photos = new Set(state.examples.map(e => e.photo)).size;
+  $('exSummary').innerHTML = `<div class="tiles">${CONDS.map(c => `<div class="tile"><b>${cnt[c] || 0}</b><span>${c[0].toUpperCase() + c.slice(1)}</span></div>`).join('')}</div>
+    <p class="note" style="margin-top:10px">${state.examples.length} labels from ${photos} photo${photos === 1 ? '' : 's'}. ${knnReady() ? '<span class="state-ok">The trained model is grading.</span>' : `The trained model starts at 8 labels with ${rules.knn_min_per_class} or more in at least two conditions.`}</p>`;
+}
+function renderSizeEval() {
+  const res = state.result;
+  const rows = res ? res.onions.filter(o => state.ruler[o.id] != null && o.diameter_mm != null).map(o => ({id: o.id, app: o.diameter_mm, ruler: state.ruler[o.id], err: o.diameter_mm - state.ruler[o.id]})) : [];
+  if (!rows.length) { $('sizeEval').innerHTML = '<p class="note">No ruler measurements for this photo yet.</p>'; return; }
+  const mae = rows.reduce((s, r) => s + Math.abs(r.err), 0) / rows.length;
+  $('sizeEval').innerHTML = `<div class="row" style="align-items:baseline;gap:10px"><span class="big">${mae.toFixed(1)} mm</span><span class="note">mean error over ${rows.length} onion${rows.length === 1 ? '' : 's'}</span></div>
+    <div class="tablewrap"><table><thead><tr><th>Onion</th><th class="n">App</th><th class="n">Ruler</th><th class="n">Error</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td>${r.id}</td><td class="n">${r.app.toFixed(1)}</td><td class="n">${r.ruler.toFixed(1)}</td><td class="n">${r.err >= 0 ? '+' : ''}${r.err.toFixed(1)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+$('btnEval').onclick = () => {
+  const r = evaluate();
+  if (r.error) { $('evalOut').innerHTML = `<p class="note">Record at least 4 officer decisions first (Scan → tap an onion).</p>`; return; }
+  $('evalOut').innerHTML = `<div class="row" style="align-items:baseline;gap:10px"><span class="big">${pct(r.accuracy)}</span><span class="note">accuracy · ${r.tested} labels · ${esc(r.scheme)}</span></div>
+    <div class="tablewrap"><table><thead><tr><th>True \\ predicted</th>${CONDS.map(c => `<th class="n">${c}</th>`).join('')}<th class="n">Recall</th><th class="n">Precision</th></tr></thead><tbody>
+    ${r.per.map(p => `<tr><th style="text-transform:capitalize">${p.cond}</th>${CONDS.map(b => `<td class="n">${r.cm[p.cond][b]}</td>`).join('')}<td class="n">${pct(p.recall)}</td><td class="n">${pct(p.precision)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="note">Built-in rules agree with these labels on ${pct(r.heuristicAgreement)}.${r.n < 30 ? ' Collect 30 or more labels for a stable figure.' : ''}</p>`;
+};
+function renderGT() {
+  if (state.source !== 'synthetic' || !state.synthetic || !state.result) { $('gtOut').innerHTML = '<p class="note">Load a sample lot on the Scan screen to compare against known values.</p>'; return; }
+  const c = compareGT(state.result, state.synthetic);
+  $('gtOut').innerHTML = `<div class="tiles">
+      <div class="tile"><b>${c.matched}/${c.truth}</b><span>onions found</span></div>
+      <div class="tile"><b>${c.extra}</b><span>extra objects</span></div>
+      <div class="tile"><b>${c.sizeMAE != null ? c.sizeMAE.toFixed(1) : '—'}</b><span>mm size error</span></div>
+      <div class="tile"><b>${c.labelAgree != null ? Math.round(100 * c.labelAgree) + '%' : '—'}</b><span>labels match</span></div></div>
+    <div class="tablewrap"><table><thead><tr><th>Known condition</th><th class="n">Known mm</th><th>Found as</th><th class="n">App mm</th></tr></thead><tbody>
+    ${c.rows.map(r => `<tr><td style="text-transform:capitalize">${r.g.cond}</td><td class="n">${r.g.d_mm.toFixed(1)}</td><td>${r.o ? r.o.id + ' ' + labelChip(r.o.label) : '<span class="state-bad">not found</span>'}</td><td class="n">${r.o && r.o.diameter_mm != null ? r.o.diameter_mm.toFixed(1) : '—'}</td></tr>`).join('')}</tbody></table></div>`;
+}
+$('btnExportEx').onclick = () => download('ekmaap_labels.json', JSON.stringify({features: FEATURES, examples: state.examples}, null, 1));
+$('inEx').onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const j = JSON.parse(await f.text());
+    if (!Array.isArray(j.examples) || String(j.features) !== String(FEATURES)) throw 0;
+    const key = x => x.photo + '#' + x.onion, have = new Set(state.examples.map(key));
+    let n = 0; for (const x of j.examples) if (!have.has(key(x))) { state.examples.push(x); n++; }
+    regrade(); renderScan(); renderExamples(); toast(`${n} labels loaded.`);
+  } catch (err) { toast('That file is not an EkMaap labels file.'); }
+  e.target.value = '';
+};
+$('btnClearEx').onclick = () => { $('clearConfirm').hidden = false; };
+$('btnClearNo').onclick = () => { $('clearConfirm').hidden = true; };
+$('btnClearYes').onclick = () => { state.examples = []; $('clearConfirm').hidden = true; regrade(); renderScan(); renderExamples(); toast('Labels cleared.'); };
+
+/* ---------- report ---------- */
+function resetReport() {
+  state.record = null;
+  $('reportDoc').innerHTML = '<div class="placeholder">The issued report appears here.</div>';
+  ['btnPrint', 'btnDlRecord', 'btnDlImg'].forEach(id => $(id).disabled = true);
+}
+async function renderReport() {
+  const rec = await buildRecord(); state.record = rec;
+  const img = $('view').toDataURL('image/jpeg', 0.85), s = rec.summary;
+  const when = new Date(rec.created_at);
+  const keys = ['Grade A', 'URS', 'Reject', 'Review'], cnt = {'Grade A': s.grade_a, URS: s.urs, Reject: s.reject, Review: s.review};
+  $('reportDoc').innerHTML = `<div class="doc">
+    <div class="doc-head"><div><p class="eyebrow">EkMaap · onion quality report</p><h2>Lot ${esc(rec.lot.id || 'unnamed')}</h2>
+      <p class="note">${when.toLocaleDateString()} ${when.toLocaleTimeString()}${rec.image.source === 'synthetic' ? ' · sample lot' : ''}</p></div><div id="qr"></div></div>
+    <div class="doc-meta">
+      <div><span>Centre</span>${esc(rec.lot.centre || '—')}</div><div><span>Officer</span>${esc(rec.lot.officer || '—')}</div>
+      <div><span>Farmer</span>${esc(rec.lot.farmer || '—')}</div><div><span>Location</span>${rec.gps ? `<span class="mono" style="display:inline;text-transform:none;letter-spacing:0;font-size:.86rem;color:var(--ink)">${rec.gps.lat.toFixed(5)}, ${rec.gps.lon.toFixed(5)}</span>` : '—'}</div></div>
+    <div class="dist" style="margin:0 0 10px">${keys.map(k => s.pct[k] ? `<i class="k-${GRADE_KEY[k]}" style="width:${s.pct[k]}%;background:var(--c)"></i>` : '').join('')}</div>
+    <div class="kpis" style="padding:0 0 14px">${keys.map(k => `<div class="kpi k-${GRADE_KEY[k]}"><b>${s.pct[k].toFixed(1)}%</b><span>${k === 'Review' ? 'Officer review' : k} · ${cnt[k]}</span></div>`).join('')}</div>
+    <img src="${img}" alt="Annotated sample photo">
+    <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>#</th><th>Label</th><th>Grade</th><th class="n">Diameter</th><th>Decided by</th></tr></thead><tbody>
+    ${rec.onions.map(o => `<tr><td>${o.id}</td><td>${o.label}</td><td>${o.grade}</td><td class="n">${o.diameter_mm ?? '—'} mm</td><td>${o.decided_by === 'kNN' ? 'Trained model' : 'Built-in rules'}</td></tr>`).join('')}</tbody></table></div>
+    <p class="note" style="margin-top:12px">${s.count} onions, percentages by count. Rule set <span class="mono">${esc(rec.rules.version)}</span>: Grade A ≥ ${rec.rules.gradeA_min_mm} mm, URS ≥ ${rec.rules.urs_min_mm} mm; damaged → ${rec.rules.map_damaged}, sprouted → ${rec.rules.map_sprouted}, rotten → ${rec.rules.map_rotten}.</p>
+    <div style="margin-top:12px"><p class="eyebrow">Photo fingerprint (SHA-256)</p><p class="hash">${rec.image.sha256}</p>
+      <p class="eyebrow" style="margin-top:8px">Record fingerprint (SHA-256)</p><p class="hash">${rec.record_sha256}</p></div>
+    <div class="sign"><div>Officer signature</div><div>Farmer signature</div></div></div>`;
+  if (window.QRCode) { try { new QRCode($('qr'), {text: `EKMAAP:${rec.record_sha256}`, width: 104, height: 104}); } catch (e) { $('qr').hidden = true; } }
+  else $('qr').hidden = true;
+  ['btnPrint', 'btnDlRecord', 'btnDlImg'].forEach(id => $(id).disabled = false);
+  return rec;
+}
+$('btnGps').onclick = () => {
+  if (!navigator.geolocation) { $('gpsOut').textContent = 'Location is not available in this browser.'; return; }
+  $('gpsOut').textContent = 'Finding location…';
+  navigator.geolocation.getCurrentPosition(p => { state.gps = {lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy}; $('gpsOut').textContent = `${state.gps.lat.toFixed(5)}, ${state.gps.lon.toFixed(5)} (±${Math.round(state.gps.acc)} m)`; resetReport(); },
+    err => { $('gpsOut').textContent = 'Location unavailable: ' + err.message; }, {enableHighAccuracy: true, timeout: 10000});
+};
+$('btnReport').onclick = async () => { if (!state.result) { toast('Scan a lot first.'); return; } await renderReport(); toast('Report issued.'); };
+$('btnPrint').onclick = () => window.print();
+$('btnDlRecord').onclick = () => state.record && download(`ekmaap_${state.record.lot.id || 'lot'}_${state.record.record_sha256.slice(0, 8)}.json`, JSON.stringify(state.record, null, 1));
+$('btnDlImg').onclick = () => state.imageBytes && download(state.fileName || 'photo', new Blob([state.imageBytes], {type: state.imageType}));
+$('btnVerify').onclick = async () => {
+  const rf = $('vRec').files[0], imf = $('vImg').files[0];
+  if (!rf) { $('verifyOut').innerHTML = '<p class="state-bad">Choose a record file.</p>'; return; }
+  const v = await verify(await rf.text(), imf ? await imf.arrayBuffer() : null);
+  if (v.msg) { $('verifyOut').innerHTML = `<p class="state-bad">${v.msg}</p>`; return; }
+  $('verifyOut').innerHTML = `<p>Record: ${v.recordOK ? '<span class="state-ok">unchanged since issue</span>' : '<span class="state-bad">changed after issue</span>'}</p>
+    <p>Photo: ${v.imageOK == null ? '<span class="muted">not checked</span>' : v.imageOK ? '<span class="state-ok">same photo</span>' : '<span class="state-bad">different photo</span>'}</p>`;
+};
+
+/* ---------- hooks for automated tests ---------- */
+EK.loadSynthetic = loadSynthetic; EK.compareGT = () => compareGT(state.result, state.synthetic);
+EK.runPipeline = runPipeline; EK.evaluate = evaluate; EK.makeSynthetic = makeSynthetic;
+EK.regrade = () => { regrade(); renderScan(); };
+EK.teachFromTruth = function () {
+  const c = compareGT(state.result, state.synthetic); let n = 0;
+  for (const r of c.rows) if (r.o) { const i = state.examples.findIndex(e => e.photo === state.imageHash && e.onion === r.o.id); const e = {photo: state.imageHash, onion: r.o.id, label: r.g.cond, f: featVec(r.o.f), source: 'synthetic'}; if (i >= 0) state.examples[i] = e; else state.examples.push(e); n++; }
+  return n;
+};
+EK.buildRecord = buildRecord; EK.renderReport = renderReport; EK.verify = verify; EK.canonical = canonical;
+
+/* ---------- start in a working state ---------- */
+fillRules();
+loadSynthetic('mixed', 2);
+
+</script>
+</body>
+</html>
