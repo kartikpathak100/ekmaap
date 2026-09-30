@@ -3,468 +3,384 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#6B2748">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="color-scheme" content="light">
 <title>EkMaap Onion Grading</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Gujarati:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&family=Noto+Sans+Telugu:wght@400;600;700&family=Noto+Sans+Kannada:wght@400;600;700&display=swap">
 <style>
-/* Layout: app shell. Phone = top bar + content + fixed bottom tab bar; desktop = tabs in the top bar,
-   Scan screen splits into photo (left) and lot result + onion list (right). Detail opens as a sheet. */
+/* One bright, high-contrast look on purpose (no dark mode): it is used outdoors, in daylight, by people of every age.
+   Big type (18px base), big touch targets (at least 56px), one main action per screen, words next to every icon. */
 :root{
-  --bg:#F3F4F1; --surface:#FFFFFF; --surface-2:#ECEEE9; --ink:#1A2220; --muted:#5C6763; --line:#D8DCD5;
-  --accent:#6B2748; --accent-ink:#FFFFFF; --accent-soft:#F4E7ED;
-  --g-a:#1F7A4A; --g-urs:#A86B12; --g-rej:#B42F2A; --g-q:#5B4BB5; --g-u:#2F6FB0; --g-s:#A86B12; --g-d:#B9531E;
-  --focus:#2F6FB0; --shadow:0 1px 2px rgba(26,34,32,.06),0 8px 24px rgba(26,34,32,.06);
-  --f-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
-  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
-  --r:10px; --gut:16px; --tabbar:64px;
+  color-scheme: light;
+  --bg:#F7F5F0; --surface:#FFFFFF; --soft:#EFECE4; --ink:#14171A; --muted:#454B52; --line:#C9C4B8;
+  --accent:#7A1C3B; --accent-ink:#FFFFFF; --accent-soft:#F6E6EC;
+  --ok:#17663D; --ok-soft:#E3F2E8; --warn:#8A5A00; --warn-soft:#FFF3D6; --bad:#A42622; --bad-soft:#FBE6E4;
+  --g-a:#17663D; --g-urs:#1F5FA8; --g-rej:#A42622; --g-q:#5A45B0;
+  --focus:#1F5FA8;
+  --font:"Noto Sans","Noto Sans Devanagari","Noto Sans Gujarati","Noto Sans Tamil","Noto Sans Telugu","Noto Sans Kannada",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,monospace;
+  --r:14px; --tap:58px; --nav:76px;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#111513; --surface:#191E1C; --surface-2:#212725; --ink:#E6EBE8; --muted:#9BA6A1; --line:#2D3532;
-  --accent:#D790B1; --accent-ink:#22101A; --accent-soft:#35222C;
-  --g-a:#4DB883; --g-urs:#E0A84E; --g-rej:#EF6C63; --g-q:#A197F2; --g-u:#72A8E6; --g-s:#E0A84E; --g-d:#EE8A55;
-  --focus:#72A8E6; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#111513; --surface:#191E1C; --surface-2:#212725; --ink:#E6EBE8; --muted:#9BA6A1; --line:#2D3532;
-  --accent:#D790B1; --accent-ink:#22101A; --accent-soft:#35222C;
-  --g-a:#4DB883; --g-urs:#E0A84E; --g-rej:#EF6C63; --g-q:#A197F2; --g-u:#72A8E6; --g-s:#E0A84E; --g-d:#EE8A55;
-  --focus:#72A8E6; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
-
 *{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 18px/1.55 var(--font);padding-bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 16px)}
 [hidden]{display:none!important}
-.scan>*,.cols>*,.report>*,.rules>*,.stack>*{min-width:0}
-html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);-webkit-font-smoothing:antialiased;
-  padding-bottom:calc(var(--tabbar) + env(safe-area-inset-bottom,0px))}
-h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:.005em;margin:0;text-wrap:balance}
-h2{font-size:1.08rem}
-h3{font-size:.95rem}
+h1,h2,h3{margin:0;line-height:1.25;text-wrap:balance}
+h2{font-size:1.45rem;font-weight:700}
+h3{font-size:1.15rem;font-weight:700}
 p{margin:0}
 button,input,select{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.num{font-variant-numeric:tabular-nums}
 .muted{color:var(--muted)}
-.eyebrow{font:600 .72rem/1.2 var(--f-body);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--mono);font-size:.85em;overflow-wrap:anywhere}
 
 /* top bar */
-.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
-.topbar-in{max-width:1240px;margin:0 auto;padding:10px var(--gut);display:flex;align-items:center;gap:16px}
-.brand{display:flex;align-items:center;gap:10px;min-width:0;margin-right:auto}
-.brand svg{flex:none}
-.brand b{font:600 1.15rem/1 var(--f-display);display:block;letter-spacing:.01em}
-.brand span{font-size:.74rem;color:var(--muted);display:block;margin-top:2px;white-space:nowrap}
-.iconbtn{display:inline-grid;place-items:center;width:38px;height:38px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer}
-.iconbtn:hover{background:var(--surface-2)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:2px solid var(--line)}
+.top-in{max-width:1180px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.logo{width:44px;height:44px;border-radius:12px;background:var(--accent);display:grid;place-items:center;flex:none}
+.brand b{display:block;font-size:1.3rem;line-height:1.1}
+.brand span{display:block;color:var(--muted);font-size:.9rem;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.langpick{display:flex;align-items:center;gap:6px;border:2px solid var(--ink);border-radius:12px;padding:0 4px 0 10px;background:var(--surface);min-height:50px}
+.langpick select{border:0;background:transparent;font-size:1.05rem;font-weight:600;min-height:46px;padding-right:4px;max-width:9.5em}
+.langpick svg{flex:none}
 
-/* navigation: bottom bar on phones, inline tabs on wide screens */
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);
-  display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom,0px)}
-.nav button{border:0;background:none;height:var(--tabbar);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  font-size:.72rem;font-weight:500;color:var(--muted);cursor:pointer;position:relative}
-.nav button svg{width:22px;height:22px}
-.nav button[aria-current="page"]{color:var(--accent)}
-.nav button[aria-current="page"]::after{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--accent)}
-@media (min-width:900px){
-  body{padding-bottom:0}
-  .nav{position:static;display:flex;gap:2px;border:0;padding:0;background:none}
-  .nav button{height:40px;flex-direction:row;gap:8px;padding:0 14px;border-radius:8px;font-size:.9rem}
-  .nav button svg{width:18px;height:18px}
-  .nav button:hover{background:var(--surface-2);color:var(--ink)}
-  .nav button[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
-  .nav button[aria-current="page"]::after{display:none}
-}
+/* bottom nav (phone) / tabs (desktop) */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:2px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+.nav button{border:0;background:none;min-height:var(--nav);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:1rem;font-weight:600;color:var(--muted);cursor:pointer;border-top:4px solid transparent}
+.nav button[aria-current]{color:var(--accent);border-top-color:var(--accent);background:var(--accent-soft)}
 
-/* page */
-main{max-width:1240px;margin:0 auto;padding:20px var(--gut) 40px}
-.screen{display:none}
-.screen.on{display:block}
-.screen-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 16px;margin-bottom:16px}
-.screen-head h1{font-size:1.5rem}
-.screen-head p{color:var(--muted);max-width:62ch;font-size:.92rem}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
-.pad{padding:16px}
-.stack{display:grid;gap:16px}
-.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+main{max-width:1180px;margin:0 auto;padding:16px 16px 0}
+.screen{display:none}.screen.on{display:block}
+.stack{display:flex;flex-direction:column;gap:16px}
+.stack>*,.cols>*{min-width:0}
+.card{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:18px}
+.card>.stack{gap:14px}
 
-/* buttons, fields */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:8px;
-  border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:.92rem;cursor:pointer;text-decoration:none;color:var(--ink)}
-.btn:hover{background:var(--surface-2)}
+/* steps */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;counter-reset:s}
+.steps li{display:flex;align-items:center;gap:8px;font-weight:600;font-size:.95rem;line-height:1.25;color:var(--muted);min-width:0}
+.steps li::before{counter-increment:s;content:counter(s);flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line);background:var(--surface);font-size:1.05rem}
+.steps li.done{color:var(--ok)}.steps li.done::before{content:"✓";background:var(--ok);border-color:var(--ok);color:#fff}
+.steps li.now{color:var(--ink)}.steps li.now::before{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:var(--tap);padding:10px 22px;border-radius:12px;border:2px solid var(--ink);background:var(--surface);font-size:1.1rem;font-weight:700;cursor:pointer;text-align:center;line-height:1.2;text-decoration:none}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.btn.primary:hover{filter:brightness(1.07);background:var(--accent)}
-.btn.sm{min-height:36px;padding:0 12px;font-size:.85rem}
+.btn.big{min-height:68px;font-size:1.25rem;width:100%}
+.btn.wide{width:100%}
+.btn.link{border-color:transparent;background:none;color:var(--accent);text-decoration:underline;text-underline-offset:4px;min-height:48px;padding:6px 8px}
 .btn:disabled{opacity:.45;cursor:not-allowed}
-.btn svg{width:18px;height:18px;flex:none}
-.field{display:grid;gap:5px;min-width:0}
-.field>span{font-size:.8rem;font-weight:500;color:var(--muted)}
-.field input,.field select{width:100%;min-height:44px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-width:0}
-.field input[type=range]{padding:0;border:0;min-height:32px;accent-color:var(--accent)}
-.field small{font-size:.76rem;color:var(--muted)}
-.fields{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.btn svg{flex:none}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 
-/* chips */
-.chip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:999px;font-size:.76rem;font-weight:600;white-space:nowrap;
-  color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);border:1px solid color-mix(in srgb,var(--c) 32%,transparent)}
-.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+/* photo */
+.photo{position:relative;background:var(--soft);border-radius:12px;overflow:hidden;min-height:220px;display:grid;place-items:center}
+.photo canvas{display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;cursor:pointer}
+.empty{padding:32px 20px;text-align:center;color:var(--muted);display:grid;gap:10px;justify-items:center}
+.busy{position:absolute;inset:0;background:rgba(255,255,255,.88);display:grid;place-items:center;font-size:1.2rem;font-weight:700}
+.busy span{display:flex;align-items:center;gap:12px}
+.spin{width:30px;height:30px;border:4px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.photo-tag{position:absolute;left:10px;bottom:10px;background:var(--surface);border:2px solid var(--ink);border-radius:999px;padding:2px 12px;font-size:.9rem;font-weight:700}
+.tip{display:flex;gap:12px;align-items:flex-start;background:var(--soft);border-radius:12px;padding:12px 14px;font-size:1rem}
+.tip svg{flex:none;margin-top:3px}
+
+/* result */
+.headline{font-size:1.6rem;font-weight:700;line-height:1.25}
+.headline em{font-style:normal;color:var(--g-a)}
+.bar{display:flex;height:22px;border-radius:999px;overflow:hidden;background:var(--soft);border:2px solid var(--ink)}
+.bar i{display:block;height:100%}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.tile{border:2px solid var(--line);border-left:10px solid var(--c);border-radius:12px;padding:10px 14px;background:var(--surface)}
+.tile b{display:block;font-size:2rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile span{display:block;font-weight:600;font-size:1rem;line-height:1.3}
+.tile small{display:block;color:var(--muted);font-size:.95rem}
 .k-a{--c:var(--g-a)}.k-urs{--c:var(--g-urs)}.k-rej{--c:var(--g-rej)}.k-q{--c:var(--g-q)}
-.k-u{--c:var(--g-u)}.k-s{--c:var(--g-s)}.k-d{--c:var(--g-d)}.k-r{--c:var(--g-rej)}
-.tag{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:6px;font-size:.74rem;font-weight:600;background:var(--surface-2);color:var(--muted);white-space:nowrap}
-.tag.accent{background:var(--accent-soft);color:var(--accent)}
+.l-A{--c:var(--g-a)}.l-U{--c:var(--g-urs)}.l-S{--c:#9A6206}.l-D{--c:#B34A16}.l-R{--c:var(--g-rej)}.l-Q{--c:var(--g-q)}
+.banner{display:flex;gap:12px;align-items:flex-start;border-radius:12px;padding:12px 14px;font-weight:600;font-size:1.05rem;border:2px solid}
+.banner svg{flex:none;margin-top:2px}
+.banner.warn{background:var(--warn-soft);border-color:#D9A93A;color:#4D3300}
+.banner.ok{background:var(--ok-soft);border-color:#7DBB93;color:#0D3F24}
+.banner.bad{background:var(--bad-soft);border-color:#E0948F;color:#5E1411}
+.chip{display:inline-block;padding:3px 12px;border-radius:999px;background:var(--c);color:#fff;font-weight:700;font-size:.95rem;line-height:1.4;white-space:nowrap}
 
-/* scan screen */
-.scan{display:grid;gap:16px}
-@media (min-width:900px){.scan{grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr);align-items:start}}
-.viewer-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:14px 16px 12px}
-.viewer-head p{font-size:.8rem;color:var(--muted);margin-top:2px}
-.frame{position:relative;background:var(--surface-2);border-block:1px solid var(--line);aspect-ratio:4/3;max-width:100%;overflow:hidden}
-.frame canvas{display:block;width:100%;height:100%;object-fit:contain;cursor:pointer;touch-action:manipulation}
-.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:var(--muted);font-size:.9rem}
-.busy{position:absolute;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--surface) 70%,transparent);font-weight:600}
-.busy span{display:inline-flex;gap:10px;align-items:center;padding:10px 16px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
-.capture{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 16px}
-.capture .primary{grid-column:1/-1}
-@media (min-width:560px){.capture{grid-template-columns:auto auto auto;justify-content:start}.capture .primary{grid-column:auto}}
-details.settings{border-top:1px solid var(--line)}
-details.settings summary{list-style:none;cursor:pointer;padding:12px 16px;font-weight:600;font-size:.88rem;display:flex;justify-content:space-between;align-items:center}
-details.settings summary::-webkit-details-marker{display:none}
-details.settings summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
-details.settings[open] summary::after{transform:rotate(-135deg)}
-.settings-body{padding:0 16px 16px;display:grid;gap:14px}
-.guide{font-size:.82rem;color:var(--muted);background:var(--surface-2);border-radius:8px;padding:10px 12px}
-
-.result-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:14px 16px 0}
-.dist{display:flex;height:12px;margin:14px 16px 0;border-radius:6px;overflow:hidden;background:var(--surface-2)}
-.dist i{display:block;height:100%}
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:14px 16px}
-.kpi{border-radius:8px;padding:10px 8px 9px;background:color-mix(in srgb,var(--c) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--c) 25%,transparent)}
-.kpi b{display:block;font:600 1.45rem/1.05 var(--f-display);color:var(--c);font-variant-numeric:tabular-nums}
-.kpi span{display:block;font-size:.72rem;line-height:1.3;color:var(--muted);margin-top:4px}
-@media (max-width:380px){.kpi b{font-size:1.2rem}}
-.facts{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;margin:0;padding:0 16px 16px;font-size:.84rem}
-.facts dt{color:var(--muted)}
-.facts dd{margin:0;text-align:right;min-width:0;overflow-wrap:anywhere}
-.facts .warn{color:var(--g-rej);font-weight:600}
-
-.list-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
-.onions{list-style:none;margin:0;padding:0;max-height:560px;overflow:auto}
-.onions li+li{border-top:1px solid var(--line)}
-.onion{width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 16px;border:0;background:none;text-align:left;cursor:pointer}
-.onion:hover{background:var(--surface-2)}
-.onion.sel{background:var(--accent-soft)}
-.idx{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 .82rem var(--f-mono);border:2px solid var(--c);color:var(--c)}
-.onion .t{font-weight:600;font-size:.92rem}
-.onion .s{font-size:.78rem;color:var(--muted)}
+/* onion list */
+.olist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.onion{width:100%;display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;text-align:left;border:2px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 12px;min-height:72px;cursor:pointer}
+.onion.q{border-color:var(--g-q);background:#F3F0FC}
+.onion.sel{outline:3px solid var(--focus);outline-offset:1px}
+.onion .n{width:48px;height:48px;border-radius:50%;background:var(--c);color:#fff;display:grid;place-items:center;font-weight:700;font-size:1.2rem}
+.onion .t{font-weight:700;font-size:1.1rem;display:block;line-height:1.3}
+.onion .s{color:var(--muted);font-size:.95rem;display:block}
 .onion .r{display:grid;justify-items:end;gap:4px}
-.onion .mm{font:500 .92rem var(--f-mono);font-variant-numeric:tabular-nums}
+.onion .mm{font-weight:700;font-size:1.1rem;font-variant-numeric:tabular-nums}
+
+/* forms */
+.field{display:grid;gap:6px}
+.field>span{font-weight:600;font-size:1rem}
+.field small{color:var(--muted);font-size:.9rem}
+.field input,.field select{min-height:56px;border:2px solid var(--line);border-radius:12px;background:var(--surface);padding:8px 14px;font-size:1.1rem;width:100%}
+.field input:focus,.field select:focus{border-color:var(--focus)}
+.grid2{display:grid;grid-template-columns:1fr;gap:14px}
+details.more{border:2px solid var(--line);border-radius:var(--r);background:var(--surface)}
+details.more>summary{list-style:none;cursor:pointer;min-height:var(--tap);padding:14px 18px;font-weight:700;font-size:1.1rem;display:flex;align-items:center;justify-content:space-between;gap:10px}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::after{content:"+";font-size:1.6rem;line-height:1}
+details.more[open]>summary::after{content:"–"}
+details.more>.in{padding:0 18px 18px;display:grid;gap:14px}
 
 /* sheet */
-.scrim{position:fixed;inset:0;background:rgba(10,14,12,.42);z-index:40}
-.sheet{position:fixed;z-index:50;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;background:var(--surface);border-radius:16px 16px 0 0;
-  box-shadow:0 -8px 40px rgba(0,0,0,.25);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (min-width:900px){.sheet{left:auto;top:0;bottom:0;width:420px;max-height:none;border-radius:0}}
-.sheet-head{position:sticky;top:0;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);z-index:1}
-.sheet-head h2{font-size:1.2rem}
-.sheet-body{padding:16px;display:grid;gap:18px}
-.metrics{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.metrics div{background:var(--surface);padding:10px 12px}
-.metrics span{display:block;font-size:.74rem;color:var(--muted)}
-.metrics b{font:600 1.05rem var(--f-display)}
-.reasons{margin:6px 0 0;padding-left:18px;font-size:.86rem;color:var(--muted)}
-.reasons li{margin:3px 0}
-.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
-.seg button{min-height:42px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:.84rem;font-weight:600;cursor:pointer;text-transform:capitalize}
-.seg button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-@media (max-width:380px){.seg{grid-template-columns:1fr 1fr}}
-.inline{display:flex;gap:8px}
-.inline input{flex:1;min-width:0;min-height:44px;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.scrim{position:fixed;inset:0;background:rgba(20,23,26,.45);z-index:40}
+.sheet{position:fixed;z-index:41;left:0;right:0;bottom:0;max-height:92vh;overflow:auto;background:var(--surface);border-radius:20px 20px 0 0;padding:0 0 calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(0,0,0,.2)}
+.sheet-head{position:sticky;top:0;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:2px solid var(--line)}
+.sheet-head h2{font-size:1.5rem}
+.sheet-body{padding:18px;display:grid;gap:18px}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.facts div{background:var(--soft);border-radius:12px;padding:10px 14px}
+.facts span{display:block;color:var(--muted);font-size:.95rem}
+.facts b{display:block;font-size:1.3rem;font-variant-numeric:tabular-nums}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{min-height:72px;border:3px solid var(--c);border-radius:14px;background:var(--surface);font-size:1.15rem;font-weight:700;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;padding:8px}
+.choice[aria-pressed="true"]{background:var(--c);color:#fff}
+.choice .dot{width:16px;height:16px;border-radius:50%;background:var(--c);flex:none}
+.choice[aria-pressed="true"] .dot{background:#fff}
+.c-sound{--c:var(--g-a)}.c-sprouted{--c:#9A6206}.c-damaged{--c:#B34A16}.c-rotten{--c:var(--g-rej)}
+.saved{font-weight:600;color:var(--ok)}
+.reasons{margin:0;padding-left:1.2em;font-size:.95rem;color:var(--muted)}
 
 /* tables */
-.tablewrap{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-size:.86rem}
-th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
-th{font-size:.74rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-td.n,th.n{text-align:right;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto;border:2px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:1rem}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:var(--soft);font-weight:700}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
 
-/* rules */
-.rules{display:grid;gap:16px}
-@media (min-width:900px){.rules{grid-template-columns:1fr 1fr}}
-.section-title{display:grid;gap:3px;margin-bottom:14px}
-.section-title p{font-size:.84rem;color:var(--muted)}
-.actionbar{position:sticky;bottom:calc(var(--tabbar) + env(safe-area-inset-bottom,0px));z-index:5;margin-top:16px;padding:12px;display:flex;flex-wrap:wrap;gap:8px;
-  background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
-@media (min-width:900px){.actionbar{bottom:16px}}
-pre{margin:0;background:var(--surface-2);border-radius:8px;padding:12px;font:.8rem/1.5 var(--f-mono);overflow:auto;max-height:280px}
+/* report document */
+.placeholder{border:2px dashed var(--line);border-radius:var(--r);padding:36px 20px;text-align:center;color:var(--muted)}
+.doc{background:#fff;border:2px solid var(--ink);border-radius:6px;padding:20px;display:grid;gap:16px}
+.doc-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:3px solid var(--ink);padding-bottom:12px}
+.doc-head .k{font-weight:700;color:var(--accent);font-size:.95rem}
+.doc-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+.doc-meta span{display:block;color:var(--muted);font-size:.9rem}
+.doc-meta b{overflow-wrap:anywhere}
+.doc img{width:100%;border-radius:6px;border:1px solid var(--line)}
+.fp{font-family:var(--mono);font-size:.8rem;overflow-wrap:anywhere;background:var(--soft);padding:8px 10px;border-radius:8px}
+.sign{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px}
+.sign div{border-top:2px solid var(--ink);padding-top:6px;font-size:.95rem;color:var(--muted)}
+#qr{flex:none}#qr img,#qr canvas{width:104px;height:104px}
 
-/* accuracy */
-.cols{display:grid;gap:16px}
-@media (min-width:900px){.cols{grid-template-columns:1fr 1fr}}
-.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-.tile{background:var(--surface-2);border-radius:8px;padding:10px}
-.tile b{display:block;font:600 1.35rem var(--f-display);font-variant-numeric:tabular-nums}
-.tile span{font-size:.74rem;color:var(--muted)}
-.big{font:600 2rem/1 var(--f-display);font-variant-numeric:tabular-nums}
-.note{font-size:.82rem;color:var(--muted)}
-.state-ok{color:var(--g-a);font-weight:600}.state-bad{color:var(--g-rej);font-weight:600}
+/* help */
+.help{margin:0;padding:0;list-style:none;display:grid;gap:12px;counter-reset:h}
+.help li{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:start}
+.help li::before{counter-increment:h;content:counter(h);width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700}
 
-/* report */
-.report{display:grid;gap:16px}
-@media (min-width:900px){.report{grid-template-columns:minmax(300px,380px) minmax(0,1fr);align-items:start}}
-.doc{padding:22px}
-.doc-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:2px solid var(--ink);padding-bottom:14px}
-.doc-head h2{font-size:1.35rem}
-.doc-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 16px;margin:14px 0;font-size:.86rem}
-.doc-meta span{display:block;font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.doc img{width:100%;border-radius:6px;border:1px solid var(--line);display:block}
-.hash{font:.76rem/1.45 var(--f-mono);overflow-wrap:anywhere;color:var(--muted)}
-#qr{flex:none;width:112px;height:112px;background:#fff;padding:4px;border-radius:6px}
-#qr img,#qr canvas{width:104px!important;height:104px!important}
-.sign{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px;font-size:.8rem;color:var(--muted)}
-.sign div{border-top:1px solid var(--ink);padding-top:6px}
-.placeholder{padding:48px 20px;text-align:center;color:var(--muted)}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(var(--nav) + env(safe-area-inset-bottom,0px) + 12px);z-index:50;max-width:560px;margin:0 auto;background:var(--ink);color:#fff;border-radius:12px;padding:14px 18px;font-weight:600;font-size:1.05rem;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.confirm{background:var(--bad-soft);border:2px solid #E0948F;border-radius:12px;padding:14px;display:grid;gap:10px}
 
-/* about */
-.steps{counter-reset:s;list-style:none;margin:0;padding:0;display:grid;gap:12px}
-.steps li{counter-increment:s;display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px;font-size:.92rem}
-.steps li::before{content:counter(s);width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font:600 .82rem var(--f-mono)}
-.steps b{display:block}
-.steps span{color:var(--muted)}
-
-/* toast */
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabbar) + 16px + env(safe-area-inset-bottom,0px));z-index:60;
-  max-width:min(92vw,480px);padding:12px 16px;border-radius:10px;background:var(--ink);color:var(--bg);font-size:.88rem;box-shadow:var(--shadow)}
-@media (min-width:900px){.toast{bottom:24px}}
-
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (min-width:640px){
+  .grid2{grid-template-columns:1fr 1fr}
+  .tiles{grid-template-columns:repeat(4,1fr)}
+}
+@media (min-width:960px){
+  body{padding-bottom:24px}
+  .nav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);bottom:auto;border-top:0;border-bottom:2px solid var(--line);z-index:19}
+  .nav-in{max-width:1180px;padding:0 16px;display:flex;gap:6px}
+  .nav button{flex-direction:row;gap:8px;min-height:56px;padding:0 22px;border-top:0;border-bottom:4px solid transparent;font-size:1.05rem}
+  .nav button[aria-current]{border-bottom-color:var(--accent)}
+  .toast{bottom:24px}
+  .cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:start}
+  .cols.even{grid-template-columns:1fr 1fr}
+  .sheet{left:auto;top:0;bottom:0;width:480px;max-height:none;border-radius:0}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+}
 @media print{
-  body{background:#fff;color:#000;padding:0}
-  .topbar,.nav,.no-print,.toast,.sheet,.scrim{display:none!important}
-  main{padding:0;max-width:none}
-  .screen{display:none!important}
-  #tab-report{display:block!important}
-  .report{display:block}
-  .panel{box-shadow:none;border:0}
+  .top,.nav,.no-print,.toast{display:none!important}
+  body{background:#fff;padding:0}
+  main{padding:0}
+  .screen{display:none!important}#tab-report{display:block!important}
+  #tab-report .card.no-print{display:none}
+  .doc{border:0;padding:0}
 }
 </style>
 </head>
 <body>
-<header class="topbar">
-  <div class="topbar-in">
+<header class="top">
+  <div class="top-in">
     <div class="brand">
-      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15.5" fill="var(--accent)"/><ellipse cx="17" cy="17" rx="10.5" ry="11.5" fill="none" stroke="var(--accent-ink)" stroke-width="1.6" opacity=".9"/><ellipse cx="17" cy="17" rx="6" ry="7.5" fill="none" stroke="var(--accent-ink)" stroke-width="1.6" opacity=".75"/><path d="M17 5.5v4M17 24.5v4" stroke="var(--accent-ink)" stroke-width="1.6"/></svg>
-      <div><b>EkMaap</b><span>Onion quality grading · SIH26031</span></div>
+      <div class="logo" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2c0 3-1.5 4-1.5 6" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M12 8c-4.5 0-7 3.2-7 6.8C5 18.6 8 21 12 21s7-2.4 7-6.2C19 11.2 16.5 8 12 8Z" fill="#fff"/><path d="M12 9v11" stroke="#7A1C3B" stroke-width="1.6"/></svg></div>
+      <div style="min-width:0"><b>EkMaap</b><span data-i="app_sub">Onion quality grading</span></div>
     </div>
-    <nav class="nav" id="nav" aria-label="Main">
-      <button data-t="scan" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Scan</button>
-      <button data-t="rules"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Rules</button>
-      <button data-t="accuracy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Accuracy</button>
-      <button data-t="report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Report</button>
-    </nav>
-    <button class="iconbtn" id="btnAbout" aria-label="How EkMaap works" title="How it works"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg></button>
+    <label class="langpick">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.6 2.8 3.8 6 3.8 9.5s-1.2 6.7-3.8 9.5c-2.6-2.8-3.8-6-3.8-9.5S9.4 5.3 12 2.5Z"/></svg>
+      <select id="langSel" data-ia="lang" aria-label="Language"></select>
+    </label>
   </div>
 </header>
 
+<nav class="nav" id="nav">
+  <div class="nav-in">
+    <button data-t="grade" aria-current="page"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span data-i="nav_grade">Grade</span></button>
+    <button data-t="report"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7M14 3v5h5"/></svg><span data-i="nav_report">Report</span></button>
+    <button data-t="settings"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.5"/><circle cx="10" cy="17" r="2.5"/></svg><span data-i="nav_settings">Settings</span></button>
+  </div>
+</nav>
+
 <main>
-<!-- ================= SCAN ================= -->
-<section class="screen on" id="tab-scan" aria-labelledby="h-scan">
-  <h1 class="vh" id="h-scan">Scan a lot</h1>
-  <div class="scan">
-    <div class="panel">
-      <div class="viewer-head">
-        <div><h2 id="srcTitle">Lot sample</h2><p id="srcLine">No photo yet</p></div>
-        <span class="tag" id="srcTag" hidden></span>
-      </div>
-      <div class="frame">
-        <div id="emptyView" class="empty">Photograph the sample on the grading sheet with the scale card beside it.</div>
-        <canvas id="view" hidden aria-label="Photo with every onion outlined. Tap an onion for details."></canvas>
-        <div class="busy" id="busy" hidden><span>Analysing photo…</span></div>
-      </div>
-      <div class="capture">
-        <label class="btn primary" for="inCam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Take photo</label>
-        <input id="inCam" class="vh" type="file" accept="image/*" capture="environment">
-        <label class="btn" for="inFile">Upload photo</label>
-        <input id="inFile" class="vh" type="file" accept="image/*">
-        <button class="btn" id="btnSyn">Sample lot</button>
-      </div>
-      <details class="settings">
-        <summary>Capture settings</summary>
-        <div class="settings-body">
-          <p class="guide">Spread the sample in one layer on a plain light sheet. Place the printed scale card flat beside the onions. Hold the phone straight above, in daylight, without flash.</p>
-          <div class="fields">
-            <label class="field"><span>Scale card side (mm)</span><input id="setCard" type="number" step="0.5" value="50" inputmode="decimal"></label>
-            <label class="field"><span>Manual scale (px per mm)</span><input id="setManual" type="number" step="0.01" value="0" inputmode="decimal"><small>0 uses the scale card</small></label>
-            <label class="field"><span>Background sensitivity</span><input id="setChroma" type="range" min="5" max="30" value="12"></label>
-            <label class="field"><span>Dark object threshold</span><input id="setDark" type="range" min="20" max="70" value="40"></label>
-            <label class="field"><span>Sample lot</span><select id="synScenario"><option value="mixed">Mixed lot</option><option value="touching">Touching onions</option></select></label>
-            <label class="field"><span>Sample number</span><input id="synSeed" type="number" value="2" min="1" max="9999" inputmode="numeric"></label>
+<!-- ============ GRADE ============ -->
+<section class="screen on" id="tab-grade">
+  <div class="stack">
+    <ol class="steps" id="steps"><li data-i="step1">Take photo</li><li data-i="step2">Check onions</li><li data-i="step3">Issue report</li></ol>
+    <div class="cols">
+      <div class="stack">
+        <div class="card"><div class="stack">
+          <div class="photo">
+            <div class="empty" id="emptyView"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><p data-i="empty">Take a photo to start.</p></div>
+            <canvas id="view" hidden></canvas>
+            <span class="photo-tag" id="srcTag" hidden></span>
+            <div class="busy" id="busy" hidden><span><i class="spin"></i><span data-i="analysing">Checking onions…</span></span></div>
           </div>
-          <div class="row"><button class="btn sm" id="btnCard">Print scale card</button></div>
+          <label class="btn primary big filebtn"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span data-i="take_photo">Take photo</span><input id="inCam" type="file" accept="image/*" capture="environment"></label>
+          <div class="grid2">
+            <label class="btn filebtn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m3 16 5-5 4 4 3-3 6 6"/><circle cx="15.5" cy="8.5" r="1.5"/></svg><span data-i="gallery">Choose from gallery</span><input id="inFile" type="file" accept="image/*"></label>
+            <button class="btn" id="btnSyn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="8" cy="14" r="4"/><circle cx="16" cy="14" r="4"/><circle cx="12" cy="7" r="3.5"/></svg><span data-i="sample">Try a sample</span></button>
+          </div>
+          <p class="tip"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5v.5"/></svg><span data-i="photo_tip"></span></p>
+        </div></div>
+        <details class="more no-print">
+          <summary data-i="more_options">More options</summary>
+          <div class="in">
+            <div class="grid2">
+              <label class="field"><span data-i="card_side">Size card side (mm)</span><input id="setCard" type="number" step="0.5" min="10" value="50" inputmode="decimal"></label>
+              <label class="field"><span data-i="manual_scale">Manual scale</span><input id="setManual" type="number" step="0.01" min="0" value="0" inputmode="decimal"><small data-i="manual_hint"></small></label>
+              <label class="field"><span data-i="bg_sens">Background sensitivity</span><input id="setChroma" type="range" min="6" max="30" value="12"></label>
+              <label class="field"><span data-i="dark_thr">Dark spot sensitivity</span><input id="setDark" type="range" min="20" max="60" value="40"></label>
+              <label class="field"><span data-i="sample_type">Sample type</span><select id="synScenario"><option value="mixed" data-i="mixed">Mixed lot</option><option value="touching" data-i="touching">Onions touching</option></select></label>
+              <label class="field"><span data-i="sample_no">Sample number</span><input id="synSeed" type="number" min="1" value="2" inputmode="numeric"></label>
+            </div>
+            <button class="btn wide" id="btnCard"><span data-i="print_card">Print size card</span></button>
+          </div>
+        </details>
+      </div>
+
+      <div class="stack" id="resultCol" hidden>
+        <div class="card"><div class="stack">
+          <p class="headline" id="headline"></p>
+          <div class="bar" id="distBar" aria-hidden="true"></div>
+          <div class="tiles" id="kpis"></div>
+          <div id="banners" class="stack" style="gap:10px"></div>
+        </div></div>
+        <div class="card"><div class="stack">
+          <div><h2 data-i="onions">Onions</h2><p class="muted" data-i="tap_hint">Tap an onion</p></div>
+          <ul class="olist" id="onionList"></ul>
+        </div></div>
+        <button class="btn primary big" id="btnNext"><span data-i="next_report">Next: make report</span><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ REPORT ============ -->
+<section class="screen" id="tab-report">
+  <div class="cols">
+    <div class="stack">
+      <div class="card no-print"><div class="stack">
+        <h2 data-i="lot_details">Lot details</h2>
+        <div class="grid2">
+          <label class="field"><span data-i="lot_id">Lot number</span><input id="lotId" autocomplete="off"></label>
+          <label class="field"><span data-i="centre">Centre</span><input id="lotCentre" autocomplete="off"></label>
+          <label class="field"><span data-i="officer">Officer</span><input id="lotOfficer" autocomplete="name"></label>
+          <label class="field"><span data-i="farmer">Farmer</span><input id="lotFarmer" autocomplete="off"></label>
+        </div>
+        <div class="row"><button class="btn" id="btnGps"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span data-i="add_location">Add location</span></button><span class="muted" id="gpsOut" data-i="no_location"></span></div>
+        <button class="btn primary big" id="btnReport"><span data-i="issue">Issue report</span></button>
+      </div></div>
+      <div class="card no-print" id="reportActions" hidden><div class="stack">
+        <button class="btn wide" id="btnPrint"><span data-i="print">Print or save PDF</span></button>
+        <div class="grid2">
+          <button class="btn" id="btnDlRecord"><span data-i="dl_record">Save report file</span></button>
+          <button class="btn" id="btnDlImg"><span data-i="dl_photo">Save photo</span></button>
+        </div>
+      </div></div>
+      <details class="more no-print">
+        <summary data-i="check_old">Check an old report</summary>
+        <div class="in">
+          <p class="muted" data-i="check_hint"></p>
+          <label class="field"><span data-i="record_file">Report file</span><input id="vRec" type="file" accept=".json,application/json"></label>
+          <label class="field"><span data-i="photo_file">Photo</span><input id="vImg" type="file" accept="image/*"></label>
+          <button class="btn primary wide" id="btnVerify"><span data-i="verify">Check</span></button>
+          <div id="verifyOut" class="stack" style="gap:10px"></div>
         </div>
       </details>
     </div>
-
-    <div class="stack">
-      <div class="panel">
-        <div class="result-head"><h2>Lot result</h2><span class="note" id="countLine"></span></div>
-        <div class="dist" id="distBar" aria-hidden="true"></div>
-        <div class="kpis" id="kpis"></div>
-        <dl class="facts" id="facts"></dl>
-      </div>
-      <div class="panel">
-        <div class="list-head"><h2>Onions</h2><span class="note">Tap to inspect or correct</span></div>
-        <ul class="onions" id="onionList"></ul>
-      </div>
-    </div>
+    <div id="reportDoc"></div>
   </div>
 </section>
 
-<!-- ================= RULES ================= -->
-<section class="screen" id="tab-rules" aria-labelledby="h-rules">
-  <div class="screen-head"><div><h1 id="h-rules">Grading rules</h1><p>Size and condition become a grade through this rule set. When procurement norms change, publish a new version here; every report records the version it used.</p></div></div>
-  <div class="rules">
-    <div class="panel pad">
-      <div class="section-title"><h2>Rule set</h2></div>
-      <div class="fields">
-        <label class="field"><span>Name</span><input id="r_name"></label>
-        <label class="field"><span>Version</span><input id="r_version"></label>
+<!-- ============ SETTINGS ============ -->
+<section class="screen" id="tab-settings">
+  <div class="stack">
+    <div><h2 data-i="settings_title">Settings</h2><p class="muted" data-i="settings_sub"></p></div>
+    <div class="cols even">
+      <div class="stack">
+        <div class="card"><div class="stack">
+          <h3 data-i="help_title">How it works</h3>
+          <ol class="help"><li data-i="h1"></li><li data-i="h2"></li><li data-i="h3"></li><li data-i="h4"></li><li data-i="h5"></li></ol>
+        </div></div>
+        <div class="card"><div class="stack">
+          <div><h3 data-i="rules_title">Grading rules</h3><p class="muted" data-i="rules_sub"></p></div>
+          <div class="grid2">
+            <label class="field"><span data-i="ga_min">Grade A: at least (mm)</span><input id="r_gradeA_min_mm" type="number" step="1" inputmode="decimal"></label>
+            <label class="field"><span data-i="urs_min">URS: at least (mm)</span><input id="r_urs_min_mm" type="number" step="1" inputmode="decimal"><small data-i="urs_hint"></small></label>
+          </div>
+          <h3 data-i="cond_to_grade" style="font-size:1.05rem">Grade for each condition</h3>
+          <div class="grid2" id="mapFields"></div>
+          <details class="more">
+            <summary data-i="advanced">Advanced settings</summary>
+            <div class="in">
+              <div class="grid2">
+                <label class="field"><span data-i="rule_name">Rule set name</span><input id="r_name"></label>
+                <label class="field"><span data-i="rule_version">Version</span><input id="r_version"></label>
+                <label class="field"><span class="mono">rot_dark_frac</span><input id="r_rot_dark_frac" type="number" step="0.01"></label>
+                <label class="field"><span class="mono">sprout_green_frac</span><input id="r_sprout_green_frac" type="number" step="0.005"></label>
+                <label class="field"><span class="mono">damage_solidity</span><input id="r_damage_solidity" type="number" step="0.01"></label>
+                <label class="field"><span class="mono">damage_pale_frac</span><input id="r_damage_pale_frac" type="number" step="0.01"></label>
+                <label class="field"><span class="mono">review_band</span><input id="r_review_band" type="number" step="0.05"></label>
+                <label class="field"><span class="mono">knn_k</span><input id="r_knn_k" type="number" step="1"></label>
+                <label class="field"><span class="mono">knn_min_per_class</span><input id="r_knn_min_per_class" type="number" step="1"></label>
+                <label class="field"><span class="mono">knn_review_below</span><input id="r_knn_review_below" type="number" step="0.05"></label>
+              </div>
+            </div>
+          </details>
+          <div class="grid2">
+            <button class="btn primary" id="btnApplyRules"><span data-i="apply">Save and re-grade</span></button>
+            <button class="btn" id="btnResetRules"><span data-i="restore">Restore defaults</span></button>
+          </div>
+        </div></div>
       </div>
-    </div>
-    <div class="panel pad">
-      <div class="section-title"><h2>Size limits</h2><p>Widest diameter, measured across the bulb.</p></div>
-      <div class="fields">
-        <label class="field"><span>Grade A minimum (mm)</span><input id="r_gradeA_min_mm" type="number" step="1" inputmode="decimal"></label>
-        <label class="field"><span>URS minimum (mm)</span><input id="r_urs_min_mm" type="number" step="1" inputmode="decimal"><small>Below this: Reject</small></label>
+      <div class="stack">
+        <div class="card"><div class="stack">
+          <div><h3 data-i="acc_title">Accuracy</h3><p class="muted" data-i="acc_sub"></p></div>
+          <div id="exSummary"></div>
+          <button class="btn primary wide" id="btnEval"><span data-i="run_eval">Measure accuracy</span></button>
+          <div id="evalOut"></div>
+          <div class="grid2">
+            <button class="btn" id="btnExportEx"><span data-i="dl_labels">Save answers file</span></button>
+            <label class="btn filebtn"><span data-i="load_labels">Load answers file</span><input id="inEx" type="file" accept=".json,application/json"></label>
+          </div>
+          <button class="btn link" id="btnClearEx"><span data-i="clear_labels">Clear answers</span></button>
+          <div class="confirm" id="clearConfirm" hidden><p data-i="clear_q"></p><div class="grid2"><button class="btn" id="btnClearYes" style="border-color:var(--bad);color:var(--bad)"><span data-i="yes_delete">Delete</span></button><button class="btn" id="btnClearNo"><span data-i="no_keep">Keep</span></button></div></div>
+        </div></div>
+        <div class="card"><div class="stack"><h3 data-i="ruler_title">Ruler check</h3><div id="sizeEval"></div></div></div>
+        <div class="card"><div class="stack"><h3 data-i="sample_check">Sample lot check</h3><div id="gtOut"></div></div></div>
       </div>
-    </div>
-    <div class="panel pad">
-      <div class="section-title"><h2>Condition to grade</h2><p>The worse of the size grade and the condition grade applies.</p></div>
-      <div class="fields">
-        <label class="field"><span>Damaged</span><select id="r_map_damaged"><option>Grade A</option><option>URS</option><option>Reject</option></select></label>
-        <label class="field"><span>Sprouted</span><select id="r_map_sprouted"><option>Grade A</option><option>URS</option><option>Reject</option></select></label>
-        <label class="field"><span>Rotten</span><select id="r_map_rotten"><option>Grade A</option><option>URS</option><option>Reject</option></select></label>
-      </div>
-    </div>
-    <div class="panel pad">
-      <div class="section-title"><h2>Detection thresholds</h2><p>Used until the classifier is trained on your labels.</p></div>
-      <div class="fields">
-        <label class="field"><span>Rotten: dark area at least</span><input id="r_rot_dark_frac" type="number" step="0.005"></label>
-        <label class="field"><span>Sprouted: green area at least</span><input id="r_sprout_green_frac" type="number" step="0.005"></label>
-        <label class="field"><span>Damaged: solidity below</span><input id="r_damage_solidity" type="number" step="0.005"></label>
-        <label class="field"><span>Damaged: exposed flesh at least</span><input id="r_damage_pale_frac" type="number" step="0.005"></label>
-        <label class="field"><span>Review band (± of a threshold)</span><input id="r_review_band" type="number" step="0.05"></label>
-      </div>
-    </div>
-    <div class="panel pad">
-      <div class="section-title"><h2>Learning from corrections</h2><p>Officer corrections train a nearest-neighbour classifier on this device.</p></div>
-      <div class="fields">
-        <label class="field"><span>Neighbours (k)</span><input id="r_knn_k" type="number" step="1" min="1"></label>
-        <label class="field"><span>Examples needed per condition</span><input id="r_knn_min_per_class" type="number" step="1" min="1"></label>
-        <label class="field"><span>Send to review below vote share</span><input id="r_knn_review_below" type="number" step="0.05"></label>
-      </div>
-    </div>
-    <div class="panel pad">
-      <details><summary class="eyebrow" style="cursor:pointer">Rule set as recorded in reports</summary><pre id="rulesJson" style="margin-top:10px"></pre></details>
-    </div>
-  </div>
-  <div class="actionbar no-print">
-    <button class="btn primary" id="btnApplyRules">Apply and re-grade</button>
-    <button class="btn" id="btnResetRules">Restore defaults</button>
-    <button class="btn" id="btnExportRules">Download rule set</button>
-  </div>
-</section>
-
-<!-- ================= ACCURACY ================= -->
-<section class="screen" id="tab-accuracy" aria-labelledby="h-acc">
-  <div class="screen-head"><div><h1 id="h-acc">Accuracy</h1><p>Every correction an officer makes becomes a training label. Measure the classifier on photos it has not seen, and check sizes against a ruler.</p></div></div>
-  <div class="cols">
-    <div class="panel pad stack">
-      <div class="section-title" style="margin:0"><h2>Training labels</h2><p>Labels live on this device. Download them to keep them.</p></div>
-      <div id="exSummary"></div>
-      <div class="row">
-        <button class="btn sm" id="btnExportEx">Download labels</button>
-        <label class="btn sm" for="inEx">Load labels</label><input id="inEx" class="vh" type="file" accept="application/json,.json">
-        <button class="btn sm" id="btnClearEx">Clear labels</button>
-      </div>
-      <p class="note" id="clearConfirm" hidden>Clear all labels on this device? <button class="btn sm" id="btnClearYes">Clear</button> <button class="btn sm" id="btnClearNo">Keep</button></p>
-    </div>
-    <div class="panel pad stack">
-      <div class="section-title" style="margin:0"><h2>Ruler check</h2><p>Enter ruler diameters in an onion's detail sheet; the error appears here.</p></div>
-      <div id="sizeEval"></div>
-    </div>
-    <div class="panel pad stack">
-      <div class="section-title" style="margin:0"><h2>Classifier accuracy</h2><p>Each label is predicted by a model that never saw it. With labels from two or more photos, whole photos are held out.</p></div>
-      <div><button class="btn primary" id="btnEval">Run evaluation</button></div>
-      <div id="evalOut"></div>
-    </div>
-    <div class="panel pad stack">
-      <div class="section-title" style="margin:0"><h2>Sample lot check</h2><p>For sample lots the true size and condition of every onion are known, so the result can be compared onion by onion.</p></div>
-      <div id="gtOut"></div>
-    </div>
-  </div>
-</section>
-
-<!-- ================= REPORT ================= -->
-<section class="screen" id="tab-report" aria-labelledby="h-rep">
-  <div class="screen-head no-print"><div><h1 id="h-rep">Quality report</h1><p>Issue a report for the lot. It carries a SHA-256 fingerprint of the photo and of the record, so any later change is detectable.</p></div></div>
-  <div class="report">
-    <div class="stack no-print">
-      <div class="panel pad stack">
-        <h2>Lot details</h2>
-        <div class="fields" style="grid-template-columns:1fr">
-          <label class="field"><span>Lot ID</span><input id="lotId" placeholder="LOT-0001" autocomplete="off"></label>
-          <label class="field"><span>Procurement centre</span><input id="lotCentre" placeholder="Centre name"></label>
-          <label class="field"><span>Officer</span><input id="lotOfficer" placeholder="Name"></label>
-          <label class="field"><span>Farmer or seller</span><input id="lotFarmer" placeholder="Name"></label>
-        </div>
-        <div class="row"><button class="btn sm" id="btnGps">Add location</button><span class="note" id="gpsOut">No location added</span></div>
-        <button class="btn primary" id="btnReport">Issue report</button>
-        <div class="row">
-          <button class="btn sm" id="btnPrint" disabled>Print or save PDF</button>
-          <button class="btn sm" id="btnDlRecord" disabled>Download record</button>
-          <button class="btn sm" id="btnDlImg" disabled>Download photo</button>
-        </div>
-      </div>
-      <div class="panel pad stack">
-        <div class="section-title" style="margin:0"><h2>Verify a report</h2><p>Load a record and the photo it was made from. Both fingerprints are recomputed on this device.</p></div>
-        <label class="field"><span>Record (.json)</span><input id="vRec" type="file" accept=".json,application/json"></label>
-        <label class="field"><span>Photo</span><input id="vImg" type="file" accept="image/*"></label>
-        <button class="btn" id="btnVerify">Verify</button>
-        <div id="verifyOut"></div>
-      </div>
-    </div>
-    <div class="panel" id="reportDoc"><div class="placeholder">The issued report appears here.</div></div>
-  </div>
-</section>
-
-<!-- ================= ABOUT ================= -->
-<section class="screen" id="tab-about" aria-labelledby="h-about">
-  <div class="screen-head"><div><h1 id="h-about">How EkMaap works</h1><p>From one photo to a verifiable grade. All processing runs on this device; nothing is uploaded.</p></div></div>
-  <div class="cols">
-    <div class="panel pad">
-      <ol class="steps">
-        <li><div><b>Learn the sheet</b><span>The colour of the grading sheet is read from the photo edges.</span></div></li>
-        <li><div><b>Find every onion</b><span>Pixels that differ from the sheet are grouped into objects; specks are removed and holes filled.</span></div></li>
-        <li><div><b>Set the scale</b><span>The printed card's known side gives millimetres per pixel.</span></div></li>
-        <li><div><b>Separate touching onions</b><span>A distance map finds each bulb's centre and splits the blob at the narrow contact.</span></div></li>
-        <li><div><b>Measure</b><span>Neck, roots and sprouts are trimmed; the widest diameter is reported in mm.</span></div></li>
-        <li><div><b>Read the surface</b><span>Share of dark (rot, mould), green (sprout) and pale (exposed flesh) area, and outline solidity (cuts, splits).</span></div></li>
-        <li><div><b>Decide the condition</b><span>Thresholds at first, then a classifier trained on officer corrections. Uncertain onions go to the officer.</span></div></li>
-        <li><div><b>Apply the rule set</b><span>Size and condition give Grade A, URS or Reject; lot percentages follow.</span></div></li>
-        <li><div><b>Issue the report</b><span>Photo and record fingerprints (SHA-256), time and location, verifiable by anyone.</span></div></li>
-      </ol>
-    </div>
-    <div class="stack">
-      <div class="panel pad stack">
-        <h2>Photographing a sample</h2>
-        <p class="note">One layer of onions on a plain light sheet, not stacked. Scale card flat on the same sheet and fully visible. Phone held straight above. Daylight or diffuse light, no flash. For white onions, use a darker sheet.</p>
-      </div>
-      <div class="panel pad stack">
-        <h2>Scope</h2>
-        <p class="note">Percentages are by count of onions photographed. A photo shows one side of each bulb; internal rot is confirmed by the officer's cut test, as today. Grade limits come from the active rule set.</p>
-      </div>
-      <div class="panel pad"><button class="btn" id="btnBackScan">Back to scanning</button></div>
     </div>
   </div>
 </section>
@@ -472,14 +388,13 @@ pre{margin:0;background:var(--surface-2);border-radius:8px;padding:12px;font:.8r
 
 <div class="scrim" id="scrim" hidden></div>
 <aside class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-  <div class="sheet-head"><h2 id="sheetTitle">Onion</h2><button class="iconbtn" id="sheetClose" aria-label="Close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="sheet-head"><h2 id="sheetTitle"></h2><button class="btn" id="sheetClose"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg><span data-i="close">Close</span></button></div>
   <div class="sheet-body" id="sheetBody"></div>
 </aside>
-<div class="toast" id="toast" role="status" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 <script>
-'use strict';
 const EK = window.EK = {};
 const $ = id => document.getElementById(id);
 const LABELS = {
@@ -883,17 +798,17 @@ function draw() {
     out.data[4 * i] = c[0]; out.data[4 * i + 1] = c[1]; out.data[4 * i + 2] = c[2];
   }
   ctx.putImageData(out, 0, 0);
-  const fs = Math.max(13, Math.round(W / 52));
-  ctx.font = `600 ${fs}px 'IBM Plex Sans',system-ui,Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const fs = Math.max(16, Math.round(W / 34));
+  ctx.font = `600 ${fs}px 'Noto Sans',system-ui,Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const o of onions) {
-    const txt = `${o.id}  ${o.label === 'Q' ? '?' : o.label}` + (o.diameter_mm != null ? `  ${o.diameter_mm.toFixed(0)} mm` : '');
+    const txt = `${o.id}${o.label === 'Q' ? ' ?' : ''}` + (o.diameter_mm != null ? `  ${o.diameter_mm.toFixed(0)} mm` : '');
     const w = ctx.measureText(txt).width + fs * 0.8;
     ctx.fillStyle = LABELS[o.label].color; ctx.globalAlpha = 0.94;
     roundRect(ctx, o.cx - w / 2, o.cy - fs * 0.75, w, fs * 1.5, fs * 0.4); ctx.fill();
     ctx.globalAlpha = 1; ctx.fillStyle = '#fff'; ctx.fillText(txt, o.cx, o.cy + 1);
   }
   if (res.card) {
-    const txt = `scale card ${settings.cardMM} mm`; ctx.font = `600 ${Math.round(fs * 0.85)}px 'IBM Plex Sans',system-ui,Arial`;
+    const txt = `■ ${settings.cardMM} mm`; ctx.font = `600 ${Math.round(fs * 0.85)}px 'Noto Sans',system-ui,Arial`;
     const w = ctx.measureText(txt).width + fs * 0.6; ctx.fillStyle = '#2F6FB0';
     roundRect(ctx, res.card.cx - w / 2, res.card.cy - fs * 0.6, w, fs * 1.2, fs * 0.3); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillText(txt, res.card.cx, res.card.cy + 1);
   }
@@ -1065,29 +980,402 @@ async function verify(recText, imgBuf) {
   const recHash = await sha256Hex(canonical(copy)), imgHash = imgBuf ? await sha256Hex(imgBuf) : null;
   return {recordOK: recHash === claimed, imageOK: imgHash ? imgHash === rec.image?.sha256 : null, recHash, claimed, imgHash, imgClaimed: rec.image?.sha256};
 }
+/* ---------------- languages ----------------
+   UI text only. Report records stay in English so fingerprints do not depend on the language. */
+const LANGS = {en: 'English', hi: 'हिन्दी', mr: 'मराठी', gu: 'ગુજરાતી', ta: 'தமிழ்', te: 'తెలుగు', kn: 'ಕನ್ನಡ'};
+const I18N = {
+en: {
+  app_sub: 'Onion quality grading', lang: 'Language',
+  nav_grade: 'Grade', nav_report: 'Report', nav_settings: 'Settings',
+  step1: 'Take photo', step2: 'Check onions', step3: 'Issue report',
+  take_photo: 'Take photo', gallery: 'Choose from gallery', sample: 'Try a sample',
+  photo_tip: 'Put the onions in one layer on a white sheet. Keep the black size card next to them. Hold the phone straight above.',
+  analysing: 'Checking onions…', sample_lot: 'Sample lot', your_photo: 'Your photo', empty: 'Take a photo to start.',
+  result: 'Result', headline: '{a} of {n} onions are Grade A', need_check: '{n} onions need your check. Tap them in the list.',
+  all_checked: 'All onions are graded.', scale_ok: 'Size card found', scale_missing: 'Size card not found. Take the photo again with the black card visible.',
+  onions: 'Onions', tap_hint: 'Tap an onion to see details or correct it', next_report: 'Next: make report',
+  more_options: 'More options', card_side: 'Size card side (mm)', manual_scale: 'Manual scale (pixels per mm)', manual_hint: 'Leave 0 to use the card',
+  bg_sens: 'Background sensitivity', dark_thr: 'Dark spot sensitivity', sample_type: 'Sample type', mixed: 'Mixed lot', touching: 'Onions touching',
+  sample_no: 'Sample number', print_card: 'Print size card',
+  c_sound: 'Good', c_sprouted: 'Sprouted', c_damaged: 'Damaged', c_rotten: 'Rotten',
+  l_A: 'Grade A', l_U: 'Too small', l_S: 'Sprouted', l_D: 'Damaged', l_R: 'Rotten', l_Q: 'Please check',
+  g_a: 'Grade A', g_urs: 'URS', g_rej: 'Reject', g_q: 'To check',
+  onion_n: 'Onion {n}', size: 'Size', width: 'Width', condition: 'Condition', decided: 'Decided by', by_rules: 'Built-in rules', by_model: 'Learned from your checks',
+  your_decision: 'Your decision', decision_hint: 'Is this correct? Tap the right condition.', recorded: 'Saved as: {c}', not_reviewed: 'Not checked yet',
+  ruler: 'Ruler size in mm (optional)', save: 'Save', close: 'Close', saved_ruler: 'Ruler size saved.', saved_cond: 'Onion {n} saved as {c}.',
+  model_on: 'Enough answers saved. The app now learns from your checks.', details: 'Technical details',
+  lot_details: 'Lot details', lot_id: 'Lot number', centre: 'Centre', officer: 'Officer', farmer: 'Farmer',
+  add_location: 'Add location', no_location: 'No location added', locating: 'Finding location…', no_gps: 'Location is not available.',
+  issue: 'Issue report', issued: 'Report issued.', print: 'Print or save PDF', dl_record: 'Save report file', dl_photo: 'Save photo',
+  report_placeholder: 'The report appears here after you tap “Issue report”.', report_title: 'Onion quality report', lot: 'Lot', location: 'Location',
+  by_count: 'Counted by number of onions.', photo_fp: 'Photo fingerprint', record_fp: 'Report fingerprint', sign_officer: 'Officer signature', sign_farmer: 'Farmer signature',
+  rules_line: 'Grade A from {a} mm · URS from {u} mm',
+  check_old: 'Check an old report', check_hint: 'Choose the report file and its photo. The app tells you if anything was changed.',
+  record_file: 'Report file (.json)', photo_file: 'Photo', verify: 'Check', verify_ok: 'Report is unchanged.', verify_bad: 'Report was changed after it was issued.',
+  photo_ok: 'Same photo.', photo_bad: 'Different photo.', photo_nc: 'Photo not checked.', choose_record: 'Choose a report file first.',
+  scan_first: 'Take a photo first.', bad_file: 'This file is not a photo. Use a JPG or PNG.', popup: 'Allow pop-ups to print the card.',
+  settings_title: 'Settings', settings_sub: 'For supervisors: grading rules, accuracy and help.',
+  rules_title: 'Grading rules', rules_sub: 'Change these when the official norms change.',
+  ga_min: 'Grade A: at least (mm)', urs_min: 'URS: at least (mm)', urs_hint: 'Smaller than this is Reject', cond_to_grade: 'Grade for each condition',
+  apply: 'Save and re-grade', restore: 'Restore defaults', rules_applied: 'Rules saved. The lot was re-graded.', rules_err: 'URS size must be more than 0 and not more than the Grade A size.',
+  advanced: 'Advanced settings', rule_name: 'Rule set name', rule_version: 'Version',
+  acc_title: 'Accuracy', acc_sub: 'Every answer an officer saves teaches the app.', answers_saved: '{n} answers saved from {p} photos',
+  run_eval: 'Measure accuracy', eval_need: 'Save at least 4 answers first.', correct: 'correct',
+  dl_labels: 'Save answers file', load_labels: 'Load answers file', clear_labels: 'Clear answers', clear_q: 'Delete all saved answers?', yes_delete: 'Delete', no_keep: 'Keep',
+  cleared: 'Answers cleared.', loaded: '{n} answers loaded.', bad_labels: 'This is not an EkMaap answers file.',
+  ruler_title: 'Ruler check', ruler_none: 'No ruler sizes entered for this photo.', avg_diff: 'average difference',
+  sample_check: 'Sample lot check', sample_hint: 'Load a sample lot to compare with its known sizes.', found: 'found', mm_diff: 'mm difference', match: 'correct',
+  help_title: 'How it works',
+  h1: 'Take a photo of the onions on a white sheet, with the black size card.', h2: 'The app finds every onion and measures it in millimetres.',
+  h3: 'It checks each onion for rot, sprouting and damage.', h4: 'It applies the grading rules and counts Grade A, URS and Reject.',
+  h5: 'You check any doubtful onion, then issue a report that cannot be changed secretly.'
+},
+hi: {
+  app_sub: 'प्याज़ गुणवत्ता ग्रेडिंग', lang: 'भाषा',
+  nav_grade: 'ग्रेड', nav_report: 'रिपोर्ट', nav_settings: 'सेटिंग',
+  step1: 'फ़ोटो लें', step2: 'प्याज़ जाँचें', step3: 'रिपोर्ट जारी करें',
+  take_photo: 'फ़ोटो लें', gallery: 'गैलरी से चुनें', sample: 'नमूना देखें',
+  photo_tip: 'प्याज़ को सफ़ेद शीट पर एक परत में रखें। काला साइज़ कार्ड पास में रखें। फ़ोन को सीधा ऊपर से पकड़ें।',
+  analysing: 'प्याज़ जाँचे जा रहे हैं…', sample_lot: 'नमूना लॉट', your_photo: 'आपकी फ़ोटो', empty: 'शुरू करने के लिए फ़ोटो लें।',
+  result: 'परिणाम', headline: '{n} में से {a} प्याज़ ग्रेड A हैं', need_check: '{n} प्याज़ आपकी जाँच के लिए हैं। सूची में उन्हें दबाएँ।',
+  all_checked: 'सभी प्याज़ का ग्रेड तय हो गया।', scale_ok: 'साइज़ कार्ड मिला', scale_missing: 'साइज़ कार्ड नहीं मिला। काला कार्ड दिखाते हुए फिर से फ़ोटो लें।',
+  onions: 'प्याज़', tap_hint: 'विवरण देखने या सुधारने के लिए प्याज़ दबाएँ', next_report: 'आगे: रिपोर्ट बनाएँ',
+  more_options: 'और विकल्प', card_side: 'साइज़ कार्ड की भुजा (मिमी)', manual_scale: 'हाथ से स्केल (पिक्सेल प्रति मिमी)', manual_hint: 'कार्ड इस्तेमाल करने के लिए 0 रखें',
+  bg_sens: 'पृष्ठभूमि संवेदनशीलता', dark_thr: 'काले धब्बे की संवेदनशीलता', sample_type: 'नमूने का प्रकार', mixed: 'मिश्रित लॉट', touching: 'सटे हुए प्याज़',
+  sample_no: 'नमूना संख्या', print_card: 'साइज़ कार्ड प्रिंट करें',
+  c_sound: 'अच्छा', c_sprouted: 'अंकुरित', c_damaged: 'क्षतिग्रस्त', c_rotten: 'सड़ा हुआ',
+  l_A: 'ग्रेड A', l_U: 'बहुत छोटा', l_S: 'अंकुरित', l_D: 'क्षतिग्रस्त', l_R: 'सड़ा हुआ', l_Q: 'कृपया जाँचें',
+  g_a: 'ग्रेड A', g_urs: 'URS', g_rej: 'अस्वीकृत', g_q: 'जाँच बाकी',
+  onion_n: 'प्याज़ {n}', size: 'आकार', width: 'चौड़ाई', condition: 'स्थिति', decided: 'किसने तय किया', by_rules: 'तय नियम', by_model: 'आपकी जाँच से सीखा',
+  your_decision: 'आपका निर्णय', decision_hint: 'क्या यह सही है? सही स्थिति दबाएँ।', recorded: 'सहेजा गया: {c}', not_reviewed: 'अभी जाँचा नहीं गया',
+  ruler: 'स्केल से नापा आकार, मिमी (वैकल्पिक)', save: 'सहेजें', close: 'बंद करें', saved_ruler: 'नाप सहेजा गया।', saved_cond: 'प्याज़ {n} को {c} के रूप में सहेजा गया।',
+  model_on: 'पर्याप्त उत्तर सहेजे गए। अब ऐप आपकी जाँच से सीखता है।', details: 'तकनीकी विवरण',
+  lot_details: 'लॉट विवरण', lot_id: 'लॉट नंबर', centre: 'केंद्र', officer: 'अधिकारी', farmer: 'किसान',
+  add_location: 'स्थान जोड़ें', no_location: 'स्थान नहीं जोड़ा गया', locating: 'स्थान खोजा जा रहा है…', no_gps: 'स्थान उपलब्ध नहीं है।',
+  issue: 'रिपोर्ट जारी करें', issued: 'रिपोर्ट जारी हो गई।', print: 'प्रिंट या PDF सहेजें', dl_record: 'रिपोर्ट फ़ाइल सहेजें', dl_photo: 'फ़ोटो सहेजें',
+  report_placeholder: '“रिपोर्ट जारी करें” दबाने के बाद रिपोर्ट यहाँ दिखेगी।', report_title: 'प्याज़ गुणवत्ता रिपोर्ट', lot: 'लॉट', location: 'स्थान',
+  by_count: 'प्याज़ की संख्या के आधार पर गिना गया।', photo_fp: 'फ़ोटो फ़िंगरप्रिंट', record_fp: 'रिपोर्ट फ़िंगरप्रिंट', sign_officer: 'अधिकारी के हस्ताक्षर', sign_farmer: 'किसान के हस्ताक्षर',
+  rules_line: 'ग्रेड A {a} मिमी से · URS {u} मिमी से',
+  check_old: 'पुरानी रिपोर्ट जाँचें', check_hint: 'रिपोर्ट फ़ाइल और उसकी फ़ोटो चुनें। ऐप बताएगा कि कुछ बदला गया है या नहीं।',
+  record_file: 'रिपोर्ट फ़ाइल (.json)', photo_file: 'फ़ोटो', verify: 'जाँचें', verify_ok: 'रिपोर्ट में कोई बदलाव नहीं है।', verify_bad: 'रिपोर्ट जारी होने के बाद बदली गई है।',
+  photo_ok: 'वही फ़ोटो है।', photo_bad: 'फ़ोटो अलग है।', photo_nc: 'फ़ोटो नहीं जाँची गई।', choose_record: 'पहले रिपोर्ट फ़ाइल चुनें।',
+  scan_first: 'पहले फ़ोटो लें।', bad_file: 'यह फ़ाइल फ़ोटो नहीं है। JPG या PNG इस्तेमाल करें।', popup: 'कार्ड प्रिंट करने के लिए पॉप-अप की अनुमति दें।',
+  settings_title: 'सेटिंग', settings_sub: 'पर्यवेक्षकों के लिए: ग्रेडिंग नियम, सटीकता और सहायता।',
+  rules_title: 'ग्रेडिंग नियम', rules_sub: 'सरकारी मानक बदलने पर इन्हें बदलें।',
+  ga_min: 'ग्रेड A: कम से कम (मिमी)', urs_min: 'URS: कम से कम (मिमी)', urs_hint: 'इससे छोटा अस्वीकृत', cond_to_grade: 'हर स्थिति का ग्रेड',
+  apply: 'सहेजें और फिर से ग्रेड करें', restore: 'मूल सेटिंग वापस लाएँ', rules_applied: 'नियम सहेजे गए। लॉट फिर से ग्रेड हुआ।', rules_err: 'URS आकार 0 से अधिक और ग्रेड A आकार से अधिक नहीं होना चाहिए।',
+  advanced: 'उन्नत सेटिंग', rule_name: 'नियम सेट का नाम', rule_version: 'संस्करण',
+  acc_title: 'सटीकता', acc_sub: 'अधिकारी का हर सहेजा उत्तर ऐप को सिखाता है।', answers_saved: '{p} फ़ोटो से {n} उत्तर सहेजे गए',
+  run_eval: 'सटीकता मापें', eval_need: 'पहले कम से कम 4 उत्तर सहेजें।', correct: 'सही',
+  dl_labels: 'उत्तर फ़ाइल सहेजें', load_labels: 'उत्तर फ़ाइल खोलें', clear_labels: 'उत्तर मिटाएँ', clear_q: 'सभी सहेजे उत्तर मिटाएँ?', yes_delete: 'मिटाएँ', no_keep: 'रहने दें',
+  cleared: 'उत्तर मिटा दिए गए।', loaded: '{n} उत्तर खोले गए।', bad_labels: 'यह EkMaap उत्तर फ़ाइल नहीं है।',
+  ruler_title: 'स्केल से जाँच', ruler_none: 'इस फ़ोटो के लिए कोई नाप नहीं डाला गया।', avg_diff: 'औसत अंतर',
+  sample_check: 'नमूना लॉट जाँच', sample_hint: 'ज्ञात आकारों से मिलाने के लिए नमूना लॉट खोलें।', found: 'मिले', mm_diff: 'मिमी अंतर', match: 'सही',
+  help_title: 'यह कैसे काम करता है',
+  h1: 'सफ़ेद शीट पर रखे प्याज़ की फ़ोटो काले साइज़ कार्ड के साथ लें।', h2: 'ऐप हर प्याज़ ढूँढता है और उसे मिलीमीटर में नापता है।',
+  h3: 'हर प्याज़ में सड़न, अंकुर और क्षति जाँचता है।', h4: 'ग्रेडिंग नियम लगाकर ग्रेड A, URS और अस्वीकृत गिनता है।',
+  h5: 'आप संदिग्ध प्याज़ जाँचें, फिर ऐसी रिपोर्ट जारी करें जिसे चुपके से बदला न जा सके।'
+},
+mr: {
+  app_sub: 'कांदा गुणवत्ता प्रतवारी', lang: 'भाषा',
+  nav_grade: 'प्रतवारी', nav_report: 'अहवाल', nav_settings: 'सेटिंग',
+  step1: 'फोटो काढा', step2: 'कांदे तपासा', step3: 'अहवाल द्या',
+  take_photo: 'फोटो काढा', gallery: 'गॅलरीतून निवडा', sample: 'नमुना पाहा',
+  photo_tip: 'कांदे पांढऱ्या कागदावर एका थरात ठेवा. काळे आकार कार्ड जवळ ठेवा. फोन सरळ वरून धरा.',
+  analysing: 'कांदे तपासत आहे…', sample_lot: 'नमुना लॉट', your_photo: 'तुमचा फोटो', empty: 'सुरू करण्यासाठी फोटो काढा.',
+  result: 'निकाल', headline: '{n} पैकी {a} कांदे ग्रेड A आहेत', need_check: '{n} कांदे तुम्ही तपासायचे आहेत. यादीत त्यांच्यावर दाबा.',
+  all_checked: 'सर्व कांद्यांची प्रतवारी झाली.', scale_ok: 'आकार कार्ड सापडले', scale_missing: 'आकार कार्ड सापडले नाही. काळे कार्ड दिसेल असा फोटो पुन्हा काढा.',
+  onions: 'कांदे', tap_hint: 'तपशील पाहण्यासाठी किंवा दुरुस्त करण्यासाठी कांद्यावर दाबा', next_report: 'पुढे: अहवाल तयार करा',
+  more_options: 'आणखी पर्याय', card_side: 'आकार कार्डची बाजू (मिमी)', manual_scale: 'हाताने स्केल (पिक्सेल प्रति मिमी)', manual_hint: 'कार्ड वापरण्यासाठी 0 ठेवा',
+  bg_sens: 'पार्श्वभूमी संवेदनशीलता', dark_thr: 'काळ्या डागांची संवेदनशीलता', sample_type: 'नमुन्याचा प्रकार', mixed: 'मिश्र लॉट', touching: 'एकमेकांना चिकटलेले कांदे',
+  sample_no: 'नमुना क्रमांक', print_card: 'आकार कार्ड प्रिंट करा',
+  c_sound: 'चांगला', c_sprouted: 'मोड आलेला', c_damaged: 'खराब झालेला', c_rotten: 'सडलेला',
+  l_A: 'ग्रेड A', l_U: 'खूप लहान', l_S: 'मोड आलेला', l_D: 'खराब झालेला', l_R: 'सडलेला', l_Q: 'कृपया तपासा',
+  g_a: 'ग्रेड A', g_urs: 'URS', g_rej: 'नाकारलेला', g_q: 'तपासणी बाकी',
+  onion_n: 'कांदा {n}', size: 'आकार', width: 'रुंदी', condition: 'स्थिती', decided: 'कोणी ठरवले', by_rules: 'ठरलेले नियम', by_model: 'तुमच्या तपासणीतून शिकलेले',
+  your_decision: 'तुमचा निर्णय', decision_hint: 'हे बरोबर आहे का? योग्य स्थितीवर दाबा.', recorded: 'जतन केले: {c}', not_reviewed: 'अजून तपासले नाही',
+  ruler: 'पट्टीने मोजलेला आकार, मिमी (ऐच्छिक)', save: 'जतन करा', close: 'बंद करा', saved_ruler: 'माप जतन केले.', saved_cond: 'कांदा {n} {c} म्हणून जतन केला.',
+  model_on: 'पुरेशी उत्तरे जतन झाली. आता ॲप तुमच्या तपासणीतून शिकते.', details: 'तांत्रिक तपशील',
+  lot_details: 'लॉट तपशील', lot_id: 'लॉट क्रमांक', centre: 'केंद्र', officer: 'अधिकारी', farmer: 'शेतकरी',
+  add_location: 'ठिकाण जोडा', no_location: 'ठिकाण जोडलेले नाही', locating: 'ठिकाण शोधत आहे…', no_gps: 'ठिकाण उपलब्ध नाही.',
+  issue: 'अहवाल द्या', issued: 'अहवाल दिला.', print: 'प्रिंट किंवा PDF जतन करा', dl_record: 'अहवाल फाइल जतन करा', dl_photo: 'फोटो जतन करा',
+  report_placeholder: '“अहवाल द्या” दाबल्यावर अहवाल येथे दिसेल.', report_title: 'कांदा गुणवत्ता अहवाल', lot: 'लॉट', location: 'ठिकाण',
+  by_count: 'कांद्यांच्या संख्येनुसार मोजले.', photo_fp: 'फोटो फिंगरप्रिंट', record_fp: 'अहवाल फिंगरप्रिंट', sign_officer: 'अधिकाऱ्याची सही', sign_farmer: 'शेतकऱ्याची सही',
+  rules_line: 'ग्रेड A {a} मिमी पासून · URS {u} मिमी पासून',
+  check_old: 'जुना अहवाल तपासा', check_hint: 'अहवाल फाइल आणि त्याचा फोटो निवडा. काही बदलले आहे का ते ॲप सांगेल.',
+  record_file: 'अहवाल फाइल (.json)', photo_file: 'फोटो', verify: 'तपासा', verify_ok: 'अहवालात कोणताही बदल नाही.', verify_bad: 'अहवाल दिल्यानंतर बदलला गेला आहे.',
+  photo_ok: 'तोच फोटो आहे.', photo_bad: 'फोटो वेगळा आहे.', photo_nc: 'फोटो तपासला नाही.', choose_record: 'आधी अहवाल फाइल निवडा.',
+  scan_first: 'आधी फोटो काढा.', bad_file: 'ही फाइल फोटो नाही. JPG किंवा PNG वापरा.', popup: 'कार्ड प्रिंट करण्यासाठी पॉप-अपला परवानगी द्या.',
+  settings_title: 'सेटिंग', settings_sub: 'पर्यवेक्षकांसाठी: प्रतवारीचे नियम, अचूकता आणि मदत.',
+  rules_title: 'प्रतवारीचे नियम', rules_sub: 'सरकारी निकष बदलल्यावर हे बदला.',
+  ga_min: 'ग्रेड A: किमान (मिमी)', urs_min: 'URS: किमान (मिमी)', urs_hint: 'यापेक्षा लहान म्हणजे नाकारलेला', cond_to_grade: 'प्रत्येक स्थितीचा ग्रेड',
+  apply: 'जतन करा आणि पुन्हा प्रतवारी करा', restore: 'मूळ सेटिंग परत आणा', rules_applied: 'नियम जतन केले. लॉटची पुन्हा प्रतवारी झाली.', rules_err: 'URS आकार 0 पेक्षा जास्त आणि ग्रेड A आकारापेक्षा जास्त नसावा.',
+  advanced: 'प्रगत सेटिंग', rule_name: 'नियम संचाचे नाव', rule_version: 'आवृत्ती',
+  acc_title: 'अचूकता', acc_sub: 'अधिकाऱ्याने जतन केलेले प्रत्येक उत्तर ॲपला शिकवते.', answers_saved: '{p} फोटोंमधून {n} उत्तरे जतन',
+  run_eval: 'अचूकता मोजा', eval_need: 'आधी किमान 4 उत्तरे जतन करा.', correct: 'बरोबर',
+  dl_labels: 'उत्तर फाइल जतन करा', load_labels: 'उत्तर फाइल उघडा', clear_labels: 'उत्तरे पुसा', clear_q: 'सर्व जतन उत्तरे पुसायची?', yes_delete: 'पुसा', no_keep: 'राहू द्या',
+  cleared: 'उत्तरे पुसली.', loaded: '{n} उत्तरे उघडली.', bad_labels: 'ही EkMaap उत्तर फाइल नाही.',
+  ruler_title: 'पट्टीने तपासणी', ruler_none: 'या फोटोसाठी कोणतेही माप टाकलेले नाही.', avg_diff: 'सरासरी फरक',
+  sample_check: 'नमुना लॉट तपासणी', sample_hint: 'माहीत असलेल्या आकारांशी तुलना करण्यासाठी नमुना लॉट उघडा.', found: 'सापडले', mm_diff: 'मिमी फरक', match: 'बरोबर',
+  help_title: 'हे कसे काम करते',
+  h1: 'पांढऱ्या कागदावरील कांद्यांचा फोटो काळ्या आकार कार्डसह काढा.', h2: 'ॲप प्रत्येक कांदा शोधते आणि मिलिमीटरमध्ये मोजते.',
+  h3: 'प्रत्येक कांद्यात सड, मोड आणि खराबी तपासते.', h4: 'प्रतवारीचे नियम लावून ग्रेड A, URS आणि नाकारलेले मोजते.',
+  h5: 'तुम्ही शंकास्पद कांदे तपासा, मग गुपचूप बदलता न येणारा अहवाल द्या.'
+},
+gu: {
+  app_sub: 'ડુંગળી ગુણવત્તા ગ્રેડિંગ', lang: 'ભાષા',
+  nav_grade: 'ગ્રેડ', nav_report: 'રિપોર્ટ', nav_settings: 'સેટિંગ',
+  step1: 'ફોટો લો', step2: 'ડુંગળી તપાસો', step3: 'રિપોર્ટ આપો',
+  take_photo: 'ફોટો લો', gallery: 'ગેલેરીમાંથી પસંદ કરો', sample: 'નમૂનો જુઓ',
+  photo_tip: 'ડુંગળીને સફેદ શીટ પર એક થરમાં મૂકો. કાળું માપ કાર્ડ પાસે રાખો. ફોન સીધો ઉપરથી પકડો.',
+  analysing: 'ડુંગળી તપાસાય છે…', sample_lot: 'નમૂના લોટ', your_photo: 'તમારો ફોટો', empty: 'શરૂ કરવા ફોટો લો.',
+  result: 'પરિણામ', headline: '{n} માંથી {a} ડુંગળી ગ્રેડ A છે', need_check: '{n} ડુંગળી તમારે તપાસવાની છે. યાદીમાં તેના પર દબાવો.',
+  all_checked: 'બધી ડુંગળીનો ગ્રેડ નક્કી થયો.', scale_ok: 'માપ કાર્ડ મળ્યું', scale_missing: 'માપ કાર્ડ મળ્યું નથી. કાળું કાર્ડ દેખાય એ રીતે ફરી ફોટો લો.',
+  onions: 'ડુંગળી', tap_hint: 'વિગત જોવા અથવા સુધારવા ડુંગળી પર દબાવો', next_report: 'આગળ: રિપોર્ટ બનાવો',
+  more_options: 'વધુ વિકલ્પો', card_side: 'માપ કાર્ડની બાજુ (મિમી)', manual_scale: 'હાથથી સ્કેલ (પિક્સેલ પ્રતિ મિમી)', manual_hint: 'કાર્ડ વાપરવા 0 રાખો',
+  bg_sens: 'પૃષ્ઠભૂમિ સંવેદનશીલતા', dark_thr: 'કાળા ડાઘની સંવેદનશીલતા', sample_type: 'નમૂનાનો પ્રકાર', mixed: 'મિશ્ર લોટ', touching: 'અડેલી ડુંગળી',
+  sample_no: 'નમૂના નંબર', print_card: 'માપ કાર્ડ પ્રિન્ટ કરો',
+  c_sound: 'સારી', c_sprouted: 'ફણગાવેલી', c_damaged: 'નુકસાનવાળી', c_rotten: 'સડેલી',
+  l_A: 'ગ્રેડ A', l_U: 'બહુ નાની', l_S: 'ફણગાવેલી', l_D: 'નુકસાનવાળી', l_R: 'સડેલી', l_Q: 'કૃપા કરી તપાસો',
+  g_a: 'ગ્રેડ A', g_urs: 'URS', g_rej: 'અસ્વીકાર', g_q: 'તપાસ બાકી',
+  onion_n: 'ડુંગળી {n}', size: 'માપ', width: 'પહોળાઈ', condition: 'સ્થિતિ', decided: 'કોણે નક્કી કર્યું', by_rules: 'નક્કી નિયમો', by_model: 'તમારી તપાસમાંથી શીખેલું',
+  your_decision: 'તમારો નિર્ણય', decision_hint: 'શું આ સાચું છે? સાચી સ્થિતિ પર દબાવો.', recorded: 'સાચવ્યું: {c}', not_reviewed: 'હજી તપાસ્યું નથી',
+  ruler: 'ફૂટપટ્ટીથી માપ, મિમી (વૈકલ્પિક)', save: 'સાચવો', close: 'બંધ કરો', saved_ruler: 'માપ સાચવ્યું.', saved_cond: 'ડુંગળી {n} {c} તરીકે સાચવી.',
+  model_on: 'પૂરતા જવાબ સાચવાયા. હવે એપ તમારી તપાસમાંથી શીખે છે.', details: 'ટેકનિકલ વિગત',
+  lot_details: 'લોટ વિગત', lot_id: 'લોટ નંબર', centre: 'કેન્દ્ર', officer: 'અધિકારી', farmer: 'ખેડૂત',
+  add_location: 'સ્થળ ઉમેરો', no_location: 'સ્થળ ઉમેર્યું નથી', locating: 'સ્થળ શોધાય છે…', no_gps: 'સ્થળ ઉપલબ્ધ નથી.',
+  issue: 'રિપોર્ટ આપો', issued: 'રિપોર્ટ અપાયો.', print: 'પ્રિન્ટ અથવા PDF સાચવો', dl_record: 'રિપોર્ટ ફાઇલ સાચવો', dl_photo: 'ફોટો સાચવો',
+  report_placeholder: '“રિપોર્ટ આપો” દબાવ્યા પછી રિપોર્ટ અહીં દેખાશે.', report_title: 'ડુંગળી ગુણવત્તા રિપોર્ટ', lot: 'લોટ', location: 'સ્થળ',
+  by_count: 'ડુંગળીની સંખ્યા મુજબ ગણ્યું.', photo_fp: 'ફોટો ફિંગરપ્રિન્ટ', record_fp: 'રિપોર્ટ ફિંગરપ્રિન્ટ', sign_officer: 'અધિકારીની સહી', sign_farmer: 'ખેડૂતની સહી',
+  rules_line: 'ગ્રેડ A {a} મિમીથી · URS {u} મિમીથી',
+  check_old: 'જૂનો રિપોર્ટ તપાસો', check_hint: 'રિપોર્ટ ફાઇલ અને તેનો ફોટો પસંદ કરો. કંઈ બદલાયું છે કે નહીં તે એપ કહેશે.',
+  record_file: 'રિપોર્ટ ફાઇલ (.json)', photo_file: 'ફોટો', verify: 'તપાસો', verify_ok: 'રિપોર્ટમાં કોઈ ફેરફાર નથી.', verify_bad: 'રિપોર્ટ અપાયા પછી બદલાયો છે.',
+  photo_ok: 'એ જ ફોટો છે.', photo_bad: 'ફોટો અલગ છે.', photo_nc: 'ફોટો તપાસ્યો નથી.', choose_record: 'પહેલા રિપોર્ટ ફાઇલ પસંદ કરો.',
+  scan_first: 'પહેલા ફોટો લો.', bad_file: 'આ ફાઇલ ફોટો નથી. JPG અથવા PNG વાપરો.', popup: 'કાર્ડ પ્રિન્ટ કરવા પોપ-અપને મંજૂરી આપો.',
+  settings_title: 'સેટિંગ', settings_sub: 'સુપરવાઇઝર માટે: ગ્રેડિંગ નિયમો, ચોકસાઈ અને મદદ.',
+  rules_title: 'ગ્રેડિંગ નિયમો', rules_sub: 'સરકારી ધોરણ બદલાય ત્યારે આ બદલો.',
+  ga_min: 'ગ્રેડ A: ઓછામાં ઓછું (મિમી)', urs_min: 'URS: ઓછામાં ઓછું (મિમી)', urs_hint: 'આનાથી નાની એટલે અસ્વીકાર', cond_to_grade: 'દરેક સ્થિતિનો ગ્રેડ',
+  apply: 'સાચવો અને ફરી ગ્રેડ કરો', restore: 'મૂળ સેટિંગ પાછું લાવો', rules_applied: 'નિયમો સાચવ્યા. લોટ ફરી ગ્રેડ થયો.', rules_err: 'URS માપ 0 થી વધુ અને ગ્રેડ A માપથી વધુ ન હોવું જોઈએ.',
+  advanced: 'વધુ સેટિંગ', rule_name: 'નિયમ સેટનું નામ', rule_version: 'આવૃત્તિ',
+  acc_title: 'ચોકસાઈ', acc_sub: 'અધિકારીનો દરેક સાચવેલો જવાબ એપને શીખવે છે.', answers_saved: '{p} ફોટોમાંથી {n} જવાબ સાચવ્યા',
+  run_eval: 'ચોકસાઈ માપો', eval_need: 'પહેલા ઓછામાં ઓછા 4 જવાબ સાચવો.', correct: 'સાચું',
+  dl_labels: 'જવાબ ફાઇલ સાચવો', load_labels: 'જવાબ ફાઇલ ખોલો', clear_labels: 'જવાબ ભૂંસો', clear_q: 'બધા સાચવેલા જવાબ ભૂંસવા છે?', yes_delete: 'ભૂંસો', no_keep: 'રહેવા દો',
+  cleared: 'જવાબ ભૂંસાયા.', loaded: '{n} જવાબ ખોલ્યા.', bad_labels: 'આ EkMaap જવાબ ફાઇલ નથી.',
+  ruler_title: 'ફૂટપટ્ટીથી તપાસ', ruler_none: 'આ ફોટો માટે કોઈ માપ નાખ્યું નથી.', avg_diff: 'સરેરાશ તફાવત',
+  sample_check: 'નમૂના લોટ તપાસ', sample_hint: 'જાણીતા માપ સાથે સરખાવવા નમૂના લોટ ખોલો.', found: 'મળી', mm_diff: 'મિમી તફાવત', match: 'સાચું',
+  help_title: 'આ કેવી રીતે કામ કરે છે',
+  h1: 'સફેદ શીટ પરની ડુંગળીનો ફોટો કાળા માપ કાર્ડ સાથે લો.', h2: 'એપ દરેક ડુંગળી શોધે છે અને મિલિમીટરમાં માપે છે.',
+  h3: 'દરેક ડુંગળીમાં સડો, ફણગા અને નુકસાન તપાસે છે.', h4: 'ગ્રેડિંગ નિયમો લગાવી ગ્રેડ A, URS અને અસ્વીકાર ગણે છે.',
+  h5: 'તમે શંકાસ્પદ ડુંગળી તપાસો, પછી છાનોમાનો ન બદલી શકાય એવો રિપોર્ટ આપો.'
+},
+ta: {
+  app_sub: 'வெங்காய தரம் பிரித்தல்', lang: 'மொழி',
+  nav_grade: 'தரம்', nav_report: 'அறிக்கை', nav_settings: 'அமைப்பு',
+  step1: 'புகைப்படம் எடு', step2: 'வெங்காயம் சரிபார்', step3: 'அறிக்கை வழங்கு',
+  take_photo: 'புகைப்படம் எடு', gallery: 'கேலரியிலிருந்து தேர்வு', sample: 'மாதிரி பார்',
+  photo_tip: 'வெங்காயங்களை வெள்ளைத் தாளில் ஒரே அடுக்காக வையுங்கள். கருப்பு அளவு அட்டையை அருகில் வையுங்கள். போனை நேராக மேலிருந்து பிடியுங்கள்.',
+  analysing: 'வெங்காயங்கள் சரிபார்க்கப்படுகின்றன…', sample_lot: 'மாதிரி லாட்', your_photo: 'உங்கள் புகைப்படம்', empty: 'தொடங்க புகைப்படம் எடுங்கள்.',
+  result: 'முடிவு', headline: '{n} இல் {a} வெங்காயங்கள் தரம் A', need_check: '{n} வெங்காயங்களை நீங்கள் சரிபார்க்க வேண்டும். பட்டியலில் அவற்றைத் தொடுங்கள்.',
+  all_checked: 'எல்லா வெங்காயங்களுக்கும் தரம் இடப்பட்டது.', scale_ok: 'அளவு அட்டை கிடைத்தது', scale_missing: 'அளவு அட்டை கிடைக்கவில்லை. கருப்பு அட்டை தெரியும்படி மீண்டும் புகைப்படம் எடுங்கள்.',
+  onions: 'வெங்காயங்கள்', tap_hint: 'விவரம் பார்க்க அல்லது திருத்த வெங்காயத்தைத் தொடுங்கள்', next_report: 'அடுத்து: அறிக்கை தயாரி',
+  more_options: 'மேலும் விருப்பங்கள்', card_side: 'அளவு அட்டையின் பக்கம் (மிமீ)', manual_scale: 'கைமுறை அளவுகோல் (மிமீக்கு பிக்சல்)', manual_hint: 'அட்டையைப் பயன்படுத்த 0 வையுங்கள்',
+  bg_sens: 'பின்னணி உணர்திறன்', dark_thr: 'கருப்பு புள்ளி உணர்திறன்', sample_type: 'மாதிரி வகை', mixed: 'கலப்பு லாட்', touching: 'ஒட்டிய வெங்காயங்கள்',
+  sample_no: 'மாதிரி எண்', print_card: 'அளவு அட்டை அச்சிடு',
+  c_sound: 'நல்லது', c_sprouted: 'முளைத்தது', c_damaged: 'சேதமானது', c_rotten: 'அழுகியது',
+  l_A: 'தரம் A', l_U: 'மிகச் சிறியது', l_S: 'முளைத்தது', l_D: 'சேதமானது', l_R: 'அழுகியது', l_Q: 'சரிபார்க்கவும்',
+  g_a: 'தரம் A', g_urs: 'URS', g_rej: 'நிராகரிப்பு', g_q: 'சரிபார்க்க வேண்டியது',
+  onion_n: 'வெங்காயம் {n}', size: 'அளவு', width: 'அகலம்', condition: 'நிலை', decided: 'முடிவு செய்தது', by_rules: 'நிர்ணய விதிகள்', by_model: 'உங்கள் சரிபார்ப்பிலிருந்து கற்றது',
+  your_decision: 'உங்கள் முடிவு', decision_hint: 'இது சரியா? சரியான நிலையைத் தொடுங்கள்.', recorded: 'சேமிக்கப்பட்டது: {c}', not_reviewed: 'இன்னும் சரிபார்க்கவில்லை',
+  ruler: 'அளவுகோலால் அளந்த அளவு, மிமீ (விருப்பம்)', save: 'சேமி', close: 'மூடு', saved_ruler: 'அளவு சேமிக்கப்பட்டது.', saved_cond: 'வெங்காயம் {n} {c} என சேமிக்கப்பட்டது.',
+  model_on: 'போதுமான பதில்கள் சேமிக்கப்பட்டன. இப்போது செயலி உங்கள் சரிபார்ப்பிலிருந்து கற்கிறது.', details: 'தொழில்நுட்ப விவரம்',
+  lot_details: 'லாட் விவரம்', lot_id: 'லாட் எண்', centre: 'மையம்', officer: 'அலுவலர்', farmer: 'விவசாயி',
+  add_location: 'இடம் சேர்', no_location: 'இடம் சேர்க்கப்படவில்லை', locating: 'இடம் தேடப்படுகிறது…', no_gps: 'இடம் கிடைக்கவில்லை.',
+  issue: 'அறிக்கை வழங்கு', issued: 'அறிக்கை வழங்கப்பட்டது.', print: 'அச்சிடு அல்லது PDF சேமி', dl_record: 'அறிக்கை கோப்பு சேமி', dl_photo: 'புகைப்படம் சேமி',
+  report_placeholder: '“அறிக்கை வழங்கு” தொட்ட பின் அறிக்கை இங்கே தெரியும்.', report_title: 'வெங்காய தர அறிக்கை', lot: 'லாட்', location: 'இடம்',
+  by_count: 'வெங்காயங்களின் எண்ணிக்கைப்படி கணக்கிடப்பட்டது.', photo_fp: 'புகைப்பட கைரேகை', record_fp: 'அறிக்கை கைரேகை', sign_officer: 'அலுவலர் கையொப்பம்', sign_farmer: 'விவசாயி கையொப்பம்',
+  rules_line: 'தரம் A {a} மிமீ முதல் · URS {u} மிமீ முதல்',
+  check_old: 'பழைய அறிக்கையைச் சரிபார்', check_hint: 'அறிக்கை கோப்பையும் அதன் புகைப்படத்தையும் தேர்வு செய்யுங்கள். ஏதாவது மாற்றப்பட்டதா என செயலி சொல்லும்.',
+  record_file: 'அறிக்கை கோப்பு (.json)', photo_file: 'புகைப்படம்', verify: 'சரிபார்', verify_ok: 'அறிக்கையில் மாற்றம் இல்லை.', verify_bad: 'வழங்கிய பின் அறிக்கை மாற்றப்பட்டுள்ளது.',
+  photo_ok: 'அதே புகைப்படம்.', photo_bad: 'வேறு புகைப்படம்.', photo_nc: 'புகைப்படம் சரிபார்க்கப்படவில்லை.', choose_record: 'முதலில் அறிக்கை கோப்பைத் தேர்வு செய்யுங்கள்.',
+  scan_first: 'முதலில் புகைப்படம் எடுங்கள்.', bad_file: 'இந்தக் கோப்பு புகைப்படம் அல்ல. JPG அல்லது PNG பயன்படுத்துங்கள்.', popup: 'அட்டையை அச்சிட பாப்-அப்பை அனுமதியுங்கள்.',
+  settings_title: 'அமைப்பு', settings_sub: 'மேற்பார்வையாளர்களுக்கு: தர விதிகள், துல்லியம் மற்றும் உதவி.',
+  rules_title: 'தர விதிகள்', rules_sub: 'அரசு நெறிமுறைகள் மாறும்போது இவற்றை மாற்றுங்கள்.',
+  ga_min: 'தரம் A: குறைந்தது (மிமீ)', urs_min: 'URS: குறைந்தது (மிமீ)', urs_hint: 'இதைவிடச் சிறியது நிராகரிப்பு', cond_to_grade: 'ஒவ்வொரு நிலைக்கும் தரம்',
+  apply: 'சேமித்து மீண்டும் தரம் இடு', restore: 'இயல்புநிலைக்குத் திரும்பு', rules_applied: 'விதிகள் சேமிக்கப்பட்டன. லாட் மீண்டும் தரம் இடப்பட்டது.', rules_err: 'URS அளவு 0-க்கு மேல் இருக்க வேண்டும், தரம் A அளவைவிட அதிகமாகக் கூடாது.',
+  advanced: 'மேம்பட்ட அமைப்பு', rule_name: 'விதித் தொகுப்பின் பெயர்', rule_version: 'பதிப்பு',
+  acc_title: 'துல்லியம்', acc_sub: 'அலுவலர் சேமிக்கும் ஒவ்வொரு பதிலும் செயலிக்குக் கற்றுத்தருகிறது.', answers_saved: '{p} புகைப்படங்களிலிருந்து {n} பதில்கள் சேமிப்பு',
+  run_eval: 'துல்லியத்தை அள', eval_need: 'முதலில் குறைந்தது 4 பதில்களைச் சேமியுங்கள்.', correct: 'சரி',
+  dl_labels: 'பதில் கோப்பு சேமி', load_labels: 'பதில் கோப்பு திற', clear_labels: 'பதில்களை அழி', clear_q: 'சேமித்த எல்லா பதில்களையும் அழிக்கவா?', yes_delete: 'அழி', no_keep: 'வைத்திரு',
+  cleared: 'பதில்கள் அழிக்கப்பட்டன.', loaded: '{n} பதில்கள் திறக்கப்பட்டன.', bad_labels: 'இது EkMaap பதில் கோப்பு அல்ல.',
+  ruler_title: 'அளவுகோல் சரிபார்ப்பு', ruler_none: 'இந்தப் புகைப்படத்திற்கு அளவு எதுவும் இடப்படவில்லை.', avg_diff: 'சராசரி வேறுபாடு',
+  sample_check: 'மாதிரி லாட் சரிபார்ப்பு', sample_hint: 'தெரிந்த அளவுகளுடன் ஒப்பிட மாதிரி லாட்டைத் திறங்கள்.', found: 'கிடைத்தது', mm_diff: 'மிமீ வேறுபாடு', match: 'சரி',
+  help_title: 'இது எப்படி வேலை செய்கிறது',
+  h1: 'வெள்ளைத் தாளில் உள்ள வெங்காயங்களை கருப்பு அளவு அட்டையுடன் புகைப்படம் எடுங்கள்.', h2: 'செயலி ஒவ்வொரு வெங்காயத்தையும் கண்டறிந்து மில்லிமீட்டரில் அளக்கிறது.',
+  h3: 'ஒவ்வொரு வெங்காயத்திலும் அழுகல், முளை, சேதம் உள்ளதா எனச் சரிபார்க்கிறது.', h4: 'தர விதிகளைப் பயன்படுத்தி தரம் A, URS, நிராகரிப்பு எண்ணுகிறது.',
+  h5: 'சந்தேகமான வெங்காயங்களை நீங்கள் சரிபார்த்து, ரகசியமாக மாற்ற முடியாத அறிக்கையை வழங்குங்கள்.'
+},
+te: {
+  app_sub: 'ఉల్లిపాయ నాణ్యత గ్రేడింగ్', lang: 'భాష',
+  nav_grade: 'గ్రేడ్', nav_report: 'నివేదిక', nav_settings: 'సెట్టింగ్‌లు',
+  step1: 'ఫోటో తీయండి', step2: 'ఉల్లిపాయలు చూడండి', step3: 'నివేదిక ఇవ్వండి',
+  take_photo: 'ఫోటో తీయండి', gallery: 'గ్యాలరీ నుండి ఎంచుకోండి', sample: 'నమూనా చూడండి',
+  photo_tip: 'ఉల్లిపాయలను తెల్లని షీట్‌పై ఒకే పొరగా ఉంచండి. నల్లని సైజు కార్డును పక్కన ఉంచండి. ఫోన్‌ను నేరుగా పైనుండి పట్టుకోండి.',
+  analysing: 'ఉల్లిపాయలు పరిశీలిస్తోంది…', sample_lot: 'నమూనా లాట్', your_photo: 'మీ ఫోటో', empty: 'ప్రారంభించడానికి ఫోటో తీయండి.',
+  result: 'ఫలితం', headline: '{n} లో {a} ఉల్లిపాయలు గ్రేడ్ A', need_check: '{n} ఉల్లిపాయలను మీరు పరిశీలించాలి. జాబితాలో వాటిని నొక్కండి.',
+  all_checked: 'అన్ని ఉల్లిపాయలకు గ్రేడ్ ఇవ్వబడింది.', scale_ok: 'సైజు కార్డు కనిపించింది', scale_missing: 'సైజు కార్డు కనిపించలేదు. నల్లని కార్డు కనిపించేలా మళ్ళీ ఫోటో తీయండి.',
+  onions: 'ఉల్లిపాయలు', tap_hint: 'వివరాలు చూడటానికి లేదా సరిచేయడానికి ఉల్లిపాయను నొక్కండి', next_report: 'తర్వాత: నివేదిక తయారు చేయండి',
+  more_options: 'మరిన్ని ఎంపికలు', card_side: 'సైజు కార్డు పక్క (మి.మీ)', manual_scale: 'చేతితో స్కేలు (మి.మీకి పిక్సెల్స్)', manual_hint: 'కార్డు వాడటానికి 0 ఉంచండి',
+  bg_sens: 'నేపథ్య సున్నితత్వం', dark_thr: 'నల్ల మచ్చల సున్నితత్వం', sample_type: 'నమూనా రకం', mixed: 'మిశ్రమ లాట్', touching: 'తాకుతున్న ఉల్లిపాయలు',
+  sample_no: 'నమూనా సంఖ్య', print_card: 'సైజు కార్డు ప్రింట్ చేయండి',
+  c_sound: 'మంచిది', c_sprouted: 'మొలకెత్తినది', c_damaged: 'దెబ్బతిన్నది', c_rotten: 'కుళ్ళినది',
+  l_A: 'గ్రేడ్ A', l_U: 'చాలా చిన్నది', l_S: 'మొలకెత్తినది', l_D: 'దెబ్బతిన్నది', l_R: 'కుళ్ళినది', l_Q: 'దయచేసి పరిశీలించండి',
+  g_a: 'గ్రేడ్ A', g_urs: 'URS', g_rej: 'తిరస్కరణ', g_q: 'పరిశీలన బాకీ',
+  onion_n: 'ఉల్లిపాయ {n}', size: 'సైజు', width: 'వెడల్పు', condition: 'స్థితి', decided: 'ఎవరు నిర్ణయించారు', by_rules: 'నిర్ణీత నియమాలు', by_model: 'మీ పరిశీలనల నుండి నేర్చుకున్నది',
+  your_decision: 'మీ నిర్ణయం', decision_hint: 'ఇది సరైనదేనా? సరైన స్థితిని నొక్కండి.', recorded: 'సేవ్ చేయబడింది: {c}', not_reviewed: 'ఇంకా పరిశీలించలేదు',
+  ruler: 'స్కేలుతో కొలిచిన సైజు, మి.మీ (ఐచ్ఛికం)', save: 'సేవ్ చేయండి', close: 'మూసివేయండి', saved_ruler: 'కొలత సేవ్ అయింది.', saved_cond: 'ఉల్లిపాయ {n} {c} గా సేవ్ అయింది.',
+  model_on: 'తగినన్ని సమాధానాలు సేవ్ అయ్యాయి. ఇప్పుడు యాప్ మీ పరిశీలనల నుండి నేర్చుకుంటుంది.', details: 'సాంకేతిక వివరాలు',
+  lot_details: 'లాట్ వివరాలు', lot_id: 'లాట్ సంఖ్య', centre: 'కేంద్రం', officer: 'అధికారి', farmer: 'రైతు',
+  add_location: 'స్థలం జోడించండి', no_location: 'స్థలం జోడించలేదు', locating: 'స్థలం వెతుకుతోంది…', no_gps: 'స్థలం అందుబాటులో లేదు.',
+  issue: 'నివేదిక ఇవ్వండి', issued: 'నివేదిక ఇవ్వబడింది.', print: 'ప్రింట్ లేదా PDF సేవ్', dl_record: 'నివేదిక ఫైల్ సేవ్', dl_photo: 'ఫోటో సేవ్',
+  report_placeholder: '“నివేదిక ఇవ్వండి” నొక్కిన తర్వాత నివేదిక ఇక్కడ కనిపిస్తుంది.', report_title: 'ఉల్లిపాయ నాణ్యత నివేదిక', lot: 'లాట్', location: 'స్థలం',
+  by_count: 'ఉల్లిపాయల సంఖ్య ప్రకారం లెక్కించబడింది.', photo_fp: 'ఫోటో వేలిముద్ర', record_fp: 'నివేదిక వేలిముద్ర', sign_officer: 'అధికారి సంతకం', sign_farmer: 'రైతు సంతకం',
+  rules_line: 'గ్రేడ్ A {a} మి.మీ నుండి · URS {u} మి.మీ నుండి',
+  check_old: 'పాత నివేదికను తనిఖీ చేయండి', check_hint: 'నివేదిక ఫైల్ మరియు దాని ఫోటోను ఎంచుకోండి. ఏదైనా మార్చబడిందో యాప్ చెబుతుంది.',
+  record_file: 'నివేదిక ఫైల్ (.json)', photo_file: 'ఫోటో', verify: 'తనిఖీ', verify_ok: 'నివేదికలో మార్పు లేదు.', verify_bad: 'ఇచ్చిన తర్వాత నివేదిక మార్చబడింది.',
+  photo_ok: 'అదే ఫోటో.', photo_bad: 'వేరే ఫోటో.', photo_nc: 'ఫోటో తనిఖీ చేయలేదు.', choose_record: 'ముందుగా నివేదిక ఫైల్‌ను ఎంచుకోండి.',
+  scan_first: 'ముందుగా ఫోటో తీయండి.', bad_file: 'ఈ ఫైల్ ఫోటో కాదు. JPG లేదా PNG వాడండి.', popup: 'కార్డు ప్రింట్ చేయడానికి పాప్-అప్‌లను అనుమతించండి.',
+  settings_title: 'సెట్టింగ్‌లు', settings_sub: 'పర్యవేక్షకుల కోసం: గ్రేడింగ్ నియమాలు, ఖచ్చితత్వం మరియు సహాయం.',
+  rules_title: 'గ్రేడింగ్ నియమాలు', rules_sub: 'ప్రభుత్వ ప్రమాణాలు మారినప్పుడు వీటిని మార్చండి.',
+  ga_min: 'గ్రేడ్ A: కనీసం (మి.మీ)', urs_min: 'URS: కనీసం (మి.మీ)', urs_hint: 'దీనికన్నా చిన్నది తిరస్కరణ', cond_to_grade: 'ప్రతి స్థితికి గ్రేడ్',
+  apply: 'సేవ్ చేసి మళ్ళీ గ్రేడ్ చేయండి', restore: 'అసలు సెట్టింగ్‌లు తిరిగి', rules_applied: 'నియమాలు సేవ్ అయ్యాయి. లాట్ మళ్ళీ గ్రేడ్ అయింది.', rules_err: 'URS సైజు 0 కన్నా ఎక్కువగా, గ్రేడ్ A సైజు కన్నా ఎక్కువ కాకుండా ఉండాలి.',
+  advanced: 'అధునాతన సెట్టింగ్‌లు', rule_name: 'నియమ సమితి పేరు', rule_version: 'వెర్షన్',
+  acc_title: 'ఖచ్చితత్వం', acc_sub: 'అధికారి సేవ్ చేసే ప్రతి సమాధానం యాప్‌కు నేర్పుతుంది.', answers_saved: '{p} ఫోటోల నుండి {n} సమాధానాలు సేవ్',
+  run_eval: 'ఖచ్చితత్వం కొలవండి', eval_need: 'ముందుగా కనీసం 4 సమాధానాలు సేవ్ చేయండి.', correct: 'సరైనవి',
+  dl_labels: 'సమాధానాల ఫైల్ సేవ్', load_labels: 'సమాధానాల ఫైల్ తెరవండి', clear_labels: 'సమాధానాలు తొలగించండి', clear_q: 'సేవ్ చేసిన అన్ని సమాధానాలు తొలగించాలా?', yes_delete: 'తొలగించు', no_keep: 'ఉంచు',
+  cleared: 'సమాధానాలు తొలగించబడ్డాయి.', loaded: '{n} సమాధానాలు తెరవబడ్డాయి.', bad_labels: 'ఇది EkMaap సమాధానాల ఫైల్ కాదు.',
+  ruler_title: 'స్కేలుతో తనిఖీ', ruler_none: 'ఈ ఫోటోకు కొలతలు నమోదు చేయలేదు.', avg_diff: 'సగటు తేడా',
+  sample_check: 'నమూనా లాట్ తనిఖీ', sample_hint: 'తెలిసిన సైజులతో పోల్చడానికి నమూనా లాట్‌ను తెరవండి.', found: 'కనిపించాయి', mm_diff: 'మి.మీ తేడా', match: 'సరైనవి',
+  help_title: 'ఇది ఎలా పనిచేస్తుంది',
+  h1: 'తెల్లని షీట్‌పై ఉన్న ఉల్లిపాయలను నల్లని సైజు కార్డుతో ఫోటో తీయండి.', h2: 'యాప్ ప్రతి ఉల్లిపాయను కనుగొని మిల్లీమీటర్లలో కొలుస్తుంది.',
+  h3: 'ప్రతి ఉల్లిపాయలో కుళ్ళు, మొలక, దెబ్బ ఉన్నాయా చూస్తుంది.', h4: 'గ్రేడింగ్ నియమాలు వర్తింపజేసి గ్రేడ్ A, URS, తిరస్కరణలను లెక్కిస్తుంది.',
+  h5: 'అనుమానాస్పద ఉల్లిపాయలను మీరు పరిశీలించి, రహస్యంగా మార్చలేని నివేదికను ఇవ్వండి.'
+},
+kn: {
+  app_sub: 'ಈರುಳ್ಳಿ ಗುಣಮಟ್ಟ ಶ್ರೇಣೀಕರಣ', lang: 'ಭಾಷೆ',
+  nav_grade: 'ಶ್ರೇಣಿ', nav_report: 'ವರದಿ', nav_settings: 'ಸೆಟ್ಟಿಂಗ್',
+  step1: 'ಫೋಟೋ ತೆಗೆಯಿರಿ', step2: 'ಈರುಳ್ಳಿ ಪರಿಶೀಲಿಸಿ', step3: 'ವರದಿ ನೀಡಿ',
+  take_photo: 'ಫೋಟೋ ತೆಗೆಯಿರಿ', gallery: 'ಗ್ಯಾಲರಿಯಿಂದ ಆಯ್ಕೆ', sample: 'ಮಾದರಿ ನೋಡಿ',
+  photo_tip: 'ಈರುಳ್ಳಿಗಳನ್ನು ಬಿಳಿ ಹಾಳೆಯ ಮೇಲೆ ಒಂದೇ ಪದರದಲ್ಲಿ ಇಡಿ. ಕಪ್ಪು ಗಾತ್ರದ ಕಾರ್ಡ್ ಪಕ್ಕದಲ್ಲಿ ಇಡಿ. ಫೋನನ್ನು ನೇರವಾಗಿ ಮೇಲಿನಿಂದ ಹಿಡಿಯಿರಿ.',
+  analysing: 'ಈರುಳ್ಳಿ ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ…', sample_lot: 'ಮಾದರಿ ಲಾಟ್', your_photo: 'ನಿಮ್ಮ ಫೋಟೋ', empty: 'ಪ್ರಾರಂಭಿಸಲು ಫೋಟೋ ತೆಗೆಯಿರಿ.',
+  result: 'ಫಲಿತಾಂಶ', headline: '{n} ರಲ್ಲಿ {a} ಈರುಳ್ಳಿ ಶ್ರೇಣಿ A', need_check: '{n} ಈರುಳ್ಳಿಗಳನ್ನು ನೀವು ಪರಿಶೀಲಿಸಬೇಕು. ಪಟ್ಟಿಯಲ್ಲಿ ಅವುಗಳನ್ನು ಒತ್ತಿ.',
+  all_checked: 'ಎಲ್ಲಾ ಈರುಳ್ಳಿಗಳಿಗೆ ಶ್ರೇಣಿ ನೀಡಲಾಗಿದೆ.', scale_ok: 'ಗಾತ್ರದ ಕಾರ್ಡ್ ಸಿಕ್ಕಿತು', scale_missing: 'ಗಾತ್ರದ ಕಾರ್ಡ್ ಸಿಗಲಿಲ್ಲ. ಕಪ್ಪು ಕಾರ್ಡ್ ಕಾಣುವಂತೆ ಮತ್ತೆ ಫೋಟೋ ತೆಗೆಯಿರಿ.',
+  onions: 'ಈರುಳ್ಳಿಗಳು', tap_hint: 'ವಿವರ ನೋಡಲು ಅಥವಾ ಸರಿಪಡಿಸಲು ಈರುಳ್ಳಿಯನ್ನು ಒತ್ತಿ', next_report: 'ಮುಂದೆ: ವರದಿ ತಯಾರಿಸಿ',
+  more_options: 'ಇನ್ನಷ್ಟು ಆಯ್ಕೆಗಳು', card_side: 'ಗಾತ್ರದ ಕಾರ್ಡ್ ಬದಿ (ಮಿ.ಮೀ)', manual_scale: 'ಕೈಯಾರೆ ಸ್ಕೇಲ್ (ಮಿ.ಮೀಗೆ ಪಿಕ್ಸೆಲ್)', manual_hint: 'ಕಾರ್ಡ್ ಬಳಸಲು 0 ಇಡಿ',
+  bg_sens: 'ಹಿನ್ನೆಲೆ ಸಂವೇದನೆ', dark_thr: 'ಕಪ್ಪು ಕಲೆ ಸಂವೇದನೆ', sample_type: 'ಮಾದರಿ ಪ್ರಕಾರ', mixed: 'ಮಿಶ್ರ ಲಾಟ್', touching: 'ಒಂದಕ್ಕೊಂದು ತಾಗಿದ ಈರುಳ್ಳಿ',
+  sample_no: 'ಮಾದರಿ ಸಂಖ್ಯೆ', print_card: 'ಗಾತ್ರದ ಕಾರ್ಡ್ ಮುದ್ರಿಸಿ',
+  c_sound: 'ಉತ್ತಮ', c_sprouted: 'ಮೊಳಕೆಯೊಡೆದ', c_damaged: 'ಹಾನಿಯಾದ', c_rotten: 'ಕೊಳೆತ',
+  l_A: 'ಶ್ರೇಣಿ A', l_U: 'ತುಂಬಾ ಚಿಕ್ಕದು', l_S: 'ಮೊಳಕೆಯೊಡೆದ', l_D: 'ಹಾನಿಯಾದ', l_R: 'ಕೊಳೆತ', l_Q: 'ದಯವಿಟ್ಟು ಪರಿಶೀಲಿಸಿ',
+  g_a: 'ಶ್ರೇಣಿ A', g_urs: 'URS', g_rej: 'ತಿರಸ್ಕೃತ', g_q: 'ಪರಿಶೀಲನೆ ಬಾಕಿ',
+  onion_n: 'ಈರುಳ್ಳಿ {n}', size: 'ಗಾತ್ರ', width: 'ಅಗಲ', condition: 'ಸ್ಥಿತಿ', decided: 'ಯಾರು ನಿರ್ಧರಿಸಿದರು', by_rules: 'ನಿಗದಿತ ನಿಯಮಗಳು', by_model: 'ನಿಮ್ಮ ಪರಿಶೀಲನೆಯಿಂದ ಕಲಿತದ್ದು',
+  your_decision: 'ನಿಮ್ಮ ನಿರ್ಧಾರ', decision_hint: 'ಇದು ಸರಿಯೇ? ಸರಿಯಾದ ಸ್ಥಿತಿಯನ್ನು ಒತ್ತಿ.', recorded: 'ಉಳಿಸಲಾಗಿದೆ: {c}', not_reviewed: 'ಇನ್ನೂ ಪರಿಶೀಲಿಸಿಲ್ಲ',
+  ruler: 'ಅಳತೆಪಟ್ಟಿಯಿಂದ ಅಳೆದ ಗಾತ್ರ, ಮಿ.ಮೀ (ಐಚ್ಛಿಕ)', save: 'ಉಳಿಸಿ', close: 'ಮುಚ್ಚಿ', saved_ruler: 'ಅಳತೆ ಉಳಿಸಲಾಗಿದೆ.', saved_cond: 'ಈರುಳ್ಳಿ {n} ಅನ್ನು {c} ಎಂದು ಉಳಿಸಲಾಗಿದೆ.',
+  model_on: 'ಸಾಕಷ್ಟು ಉತ್ತರಗಳು ಉಳಿದಿವೆ. ಈಗ ಆ್ಯಪ್ ನಿಮ್ಮ ಪರಿಶೀಲನೆಯಿಂದ ಕಲಿಯುತ್ತದೆ.', details: 'ತಾಂತ್ರಿಕ ವಿವರ',
+  lot_details: 'ಲಾಟ್ ವಿವರ', lot_id: 'ಲಾಟ್ ಸಂಖ್ಯೆ', centre: 'ಕೇಂದ್ರ', officer: 'ಅಧಿಕಾರಿ', farmer: 'ರೈತ',
+  add_location: 'ಸ್ಥಳ ಸೇರಿಸಿ', no_location: 'ಸ್ಥಳ ಸೇರಿಸಿಲ್ಲ', locating: 'ಸ್ಥಳ ಹುಡುಕಲಾಗುತ್ತಿದೆ…', no_gps: 'ಸ್ಥಳ ಲಭ್ಯವಿಲ್ಲ.',
+  issue: 'ವರದಿ ನೀಡಿ', issued: 'ವರದಿ ನೀಡಲಾಗಿದೆ.', print: 'ಮುದ್ರಿಸಿ ಅಥವಾ PDF ಉಳಿಸಿ', dl_record: 'ವರದಿ ಫೈಲ್ ಉಳಿಸಿ', dl_photo: 'ಫೋಟೋ ಉಳಿಸಿ',
+  report_placeholder: '“ವರದಿ ನೀಡಿ” ಒತ್ತಿದ ನಂತರ ವರದಿ ಇಲ್ಲಿ ಕಾಣುತ್ತದೆ.', report_title: 'ಈರುಳ್ಳಿ ಗುಣಮಟ್ಟ ವರದಿ', lot: 'ಲಾಟ್', location: 'ಸ್ಥಳ',
+  by_count: 'ಈರುಳ್ಳಿಗಳ ಸಂಖ್ಯೆಯ ಆಧಾರದಲ್ಲಿ ಎಣಿಸಲಾಗಿದೆ.', photo_fp: 'ಫೋಟೋ ಬೆರಳಚ್ಚು', record_fp: 'ವರದಿ ಬೆರಳಚ್ಚು', sign_officer: 'ಅಧಿಕಾರಿಯ ಸಹಿ', sign_farmer: 'ರೈತನ ಸಹಿ',
+  rules_line: 'ಶ್ರೇಣಿ A {a} ಮಿ.ಮೀ ಇಂದ · URS {u} ಮಿ.ಮೀ ಇಂದ',
+  check_old: 'ಹಳೆಯ ವರದಿ ಪರಿಶೀಲಿಸಿ', check_hint: 'ವರದಿ ಫೈಲ್ ಮತ್ತು ಅದರ ಫೋಟೋ ಆಯ್ಕೆಮಾಡಿ. ಏನಾದರೂ ಬದಲಾಗಿದೆಯೇ ಎಂದು ಆ್ಯಪ್ ಹೇಳುತ್ತದೆ.',
+  record_file: 'ವರದಿ ಫೈಲ್ (.json)', photo_file: 'ಫೋಟೋ', verify: 'ಪರಿಶೀಲಿಸಿ', verify_ok: 'ವರದಿಯಲ್ಲಿ ಬದಲಾವಣೆ ಇಲ್ಲ.', verify_bad: 'ನೀಡಿದ ನಂತರ ವರದಿ ಬದಲಾಗಿದೆ.',
+  photo_ok: 'ಅದೇ ಫೋಟೋ.', photo_bad: 'ಬೇರೆ ಫೋಟೋ.', photo_nc: 'ಫೋಟೋ ಪರಿಶೀಲಿಸಿಲ್ಲ.', choose_record: 'ಮೊದಲು ವರದಿ ಫೈಲ್ ಆಯ್ಕೆಮಾಡಿ.',
+  scan_first: 'ಮೊದಲು ಫೋಟೋ ತೆಗೆಯಿರಿ.', bad_file: 'ಈ ಫೈಲ್ ಫೋಟೋ ಅಲ್ಲ. JPG ಅಥವಾ PNG ಬಳಸಿ.', popup: 'ಕಾರ್ಡ್ ಮುದ್ರಿಸಲು ಪಾಪ್-ಅಪ್ ಅನುಮತಿಸಿ.',
+  settings_title: 'ಸೆಟ್ಟಿಂಗ್', settings_sub: 'ಮೇಲ್ವಿಚಾರಕರಿಗೆ: ಶ್ರೇಣೀಕರಣ ನಿಯಮಗಳು, ನಿಖರತೆ ಮತ್ತು ಸಹಾಯ.',
+  rules_title: 'ಶ್ರೇಣೀಕರಣ ನಿಯಮಗಳು', rules_sub: 'ಸರ್ಕಾರಿ ಮಾನದಂಡ ಬದಲಾದಾಗ ಇವುಗಳನ್ನು ಬದಲಿಸಿ.',
+  ga_min: 'ಶ್ರೇಣಿ A: ಕನಿಷ್ಠ (ಮಿ.ಮೀ)', urs_min: 'URS: ಕನಿಷ್ಠ (ಮಿ.ಮೀ)', urs_hint: 'ಇದಕ್ಕಿಂತ ಚಿಕ್ಕದು ತಿರಸ್ಕೃತ', cond_to_grade: 'ಪ್ರತಿ ಸ್ಥಿತಿಗೆ ಶ್ರೇಣಿ',
+  apply: 'ಉಳಿಸಿ ಮತ್ತೆ ಶ್ರೇಣೀಕರಿಸಿ', restore: 'ಮೂಲ ಸೆಟ್ಟಿಂಗ್ ಮರಳಿಸಿ', rules_applied: 'ನಿಯಮಗಳು ಉಳಿದಿವೆ. ಲಾಟ್ ಮತ್ತೆ ಶ್ರೇಣೀಕರಿಸಲಾಗಿದೆ.', rules_err: 'URS ಗಾತ್ರ 0 ಕ್ಕಿಂತ ಹೆಚ್ಚು ಮತ್ತು ಶ್ರೇಣಿ A ಗಾತ್ರಕ್ಕಿಂತ ಹೆಚ್ಚಿರಬಾರದು.',
+  advanced: 'ಸುಧಾರಿತ ಸೆಟ್ಟಿಂಗ್', rule_name: 'ನಿಯಮ ಸಂಗ್ರಹದ ಹೆಸರು', rule_version: 'ಆವೃತ್ತಿ',
+  acc_title: 'ನಿಖರತೆ', acc_sub: 'ಅಧಿಕಾರಿ ಉಳಿಸುವ ಪ್ರತಿ ಉತ್ತರವೂ ಆ್ಯಪ್‌ಗೆ ಕಲಿಸುತ್ತದೆ.', answers_saved: '{p} ಫೋಟೋಗಳಿಂದ {n} ಉತ್ತರಗಳು ಉಳಿದಿವೆ',
+  run_eval: 'ನಿಖರತೆ ಅಳೆಯಿರಿ', eval_need: 'ಮೊದಲು ಕನಿಷ್ಠ 4 ಉತ್ತರಗಳನ್ನು ಉಳಿಸಿ.', correct: 'ಸರಿ',
+  dl_labels: 'ಉತ್ತರ ಫೈಲ್ ಉಳಿಸಿ', load_labels: 'ಉತ್ತರ ಫೈಲ್ ತೆರೆಯಿರಿ', clear_labels: 'ಉತ್ತರಗಳನ್ನು ಅಳಿಸಿ', clear_q: 'ಉಳಿಸಿದ ಎಲ್ಲಾ ಉತ್ತರಗಳನ್ನು ಅಳಿಸಬೇಕೆ?', yes_delete: 'ಅಳಿಸಿ', no_keep: 'ಇರಲಿ',
+  cleared: 'ಉತ್ತರಗಳನ್ನು ಅಳಿಸಲಾಗಿದೆ.', loaded: '{n} ಉತ್ತರಗಳು ತೆರೆಯಲಾಗಿದೆ.', bad_labels: 'ಇದು EkMaap ಉತ್ತರ ಫೈಲ್ ಅಲ್ಲ.',
+  ruler_title: 'ಅಳತೆಪಟ್ಟಿ ಪರಿಶೀಲನೆ', ruler_none: 'ಈ ಫೋಟೋಗೆ ಯಾವುದೇ ಅಳತೆ ನಮೂದಿಸಿಲ್ಲ.', avg_diff: 'ಸರಾಸರಿ ವ್ಯತ್ಯಾಸ',
+  sample_check: 'ಮಾದರಿ ಲಾಟ್ ಪರಿಶೀಲನೆ', sample_hint: 'ತಿಳಿದ ಗಾತ್ರಗಳೊಂದಿಗೆ ಹೋಲಿಸಲು ಮಾದರಿ ಲಾಟ್ ತೆರೆಯಿರಿ.', found: 'ಸಿಕ್ಕಿವೆ', mm_diff: 'ಮಿ.ಮೀ ವ್ಯತ್ಯಾಸ', match: 'ಸರಿ',
+  help_title: 'ಇದು ಹೇಗೆ ಕೆಲಸ ಮಾಡುತ್ತದೆ',
+  h1: 'ಬಿಳಿ ಹಾಳೆಯ ಮೇಲಿನ ಈರುಳ್ಳಿಗಳ ಫೋಟೋವನ್ನು ಕಪ್ಪು ಗಾತ್ರದ ಕಾರ್ಡ್ ಜೊತೆ ತೆಗೆಯಿರಿ.', h2: 'ಆ್ಯಪ್ ಪ್ರತಿ ಈರುಳ್ಳಿಯನ್ನು ಹುಡುಕಿ ಮಿಲಿಮೀಟರ್‌ನಲ್ಲಿ ಅಳೆಯುತ್ತದೆ.',
+  h3: 'ಪ್ರತಿ ಈರುಳ್ಳಿಯಲ್ಲಿ ಕೊಳೆ, ಮೊಳಕೆ, ಹಾನಿ ಇದೆಯೇ ಪರಿಶೀಲಿಸುತ್ತದೆ.', h4: 'ಶ್ರೇಣೀಕರಣ ನಿಯಮಗಳನ್ನು ಅನ್ವಯಿಸಿ ಶ್ರೇಣಿ A, URS, ತಿರಸ್ಕೃತ ಎಣಿಸುತ್ತದೆ.',
+  h5: 'ಸಂಶಯಾಸ್ಪದ ಈರುಳ್ಳಿಗಳನ್ನು ನೀವು ಪರಿಶೀಲಿಸಿ, ರಹಸ್ಯವಾಗಿ ಬದಲಿಸಲಾಗದ ವರದಿ ನೀಡಿ.'
+}
+};
+let lang = 'en';
+try { const s = localStorage.getItem('ekmaap_lang'); if (s && I18N[s]) lang = s; } catch (e) { /* storage unavailable */ }
+function t(key, vars) {
+  let s = (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
+  if (vars) for (const [k, v] of Object.entries(vars)) s = s.split('{' + k + '}').join(v);
+  return s;
+}
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i]').forEach(el => { el.textContent = t(el.dataset.i); });
+  document.querySelectorAll('[data-ip]').forEach(el => { el.placeholder = t(el.dataset.ip); });
+  document.querySelectorAll('[data-ia]').forEach(el => { el.setAttribute('aria-label', t(el.dataset.ia)); });
+}
+
 /* ================================ UI ================================ */
 const frame = () => new Promise(r => requestAnimationFrame(() => setTimeout(r, 0)));
-const pct = v => v == null ? '—' : (100 * v).toFixed(1) + '%';
-const COND_KEY = {sound: 'a', sprouted: 's', damaged: 'd', rotten: 'r'};
-function labelChip(l) { return `<span class="chip k-${LABELS[l].key}">${LABELS[l].name}</span>`; }
-function gradeChip(g) { return `<span class="chip k-${GRADE_KEY[g]}">${g}</span>`; }
+const pct = v => v == null ? '—' : Math.round(100 * v) + '%';
+const GRADES = ['Grade A', 'URS', 'Reject', 'Review'];
+const gName = g => t('g_' + GRADE_KEY[g]);
+const lName = l => t('l_' + l);
+const cName = c => t('c_' + c);
+const mm = v => v == null ? '—' : v.toFixed(0) + ' mm';
+function gradeChip(g) { return `<span class="chip k-${GRADE_KEY[g]}">${esc(gName(g))}</span>`; }
+const ICON = {
+  warn: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.5"/></svg>',
+  ok: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12 3 3 6-6"/></svg>',
+  bad: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9 9l6 6M15 9l-6 6"/></svg>'
+};
+const banner = (kind, text) => `<div class="banner ${kind}">${ICON[kind]}<span>${text}</span></div>`;
 
 let toastTimer = null;
 function toast(msg) {
-  const t = $('toast'); t.textContent = msg; t.hidden = false;
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3800);
+  const el = $('toast'); el.textContent = msg; el.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 4000);
 }
+let currentTab = 'grade';
 function show(tab) {
+  currentTab = tab;
   document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === 'tab-' + tab));
-  document.querySelectorAll('#nav button').forEach(b => b.toggleAttribute('aria-current', b.dataset.t === tab) || (b.dataset.t === tab && b.setAttribute('aria-current', 'page')));
   document.querySelectorAll('#nav button').forEach(b => { if (b.dataset.t === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-  if (tab === 'rules') fillRules();
-  if (tab === 'accuracy') renderAccuracy();
+  if (tab === 'settings') { fillRules(); renderAccuracy(); }
+  renderSteps();
   window.scrollTo({top: 0});
 }
 document.querySelectorAll('#nav button').forEach(b => b.onclick = () => show(b.dataset.t));
-$('btnAbout').onclick = () => show('about');
-$('btnBackScan').onclick = () => show('scan');
+$('btnNext').onclick = () => show('report');
+
+function renderSteps() {
+  const li = $('steps').children, has = !!state.result, issued = !!state.record;
+  const st = [has ? 'done' : 'now', issued ? 'done' : has ? 'now' : '', issued ? 'done' : (currentTab === 'report' && has ? 'now' : '')];
+  if (st[2] === 'now') st[1] = 'done';
+  for (let i = 0; i < 3; i++) li[i].className = st[i];
+}
+
+/* ---------- language ---------- */
+const langSel = $('langSel');
+langSel.innerHTML = Object.entries(LANGS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+langSel.value = lang;
+langSel.onchange = () => {
+  lang = langSel.value;
+  try { localStorage.setItem('ekmaap_lang', lang); } catch (e) { /* storage unavailable */ }
+  refreshAll();
+};
+function refreshAll() {
+  applyLang(); buildMapFields(); renderScan();
+  if (!state.gps) $('gpsOut').textContent = t('no_location');
+  if (state.record) renderReportDoc(state.record); else resetReport();
+  if (currentTab === 'settings') { fillRules(); renderAccuracy(); }
+}
 
 /* ---------- loading ---------- */
 function setBusy(b) { $('busy').hidden = !b; }
@@ -1099,9 +1387,9 @@ async function loadFile(file) {
     const bmp = await createImageBitmap(new Blob([buf], {type: file.type || 'image/jpeg'}));
     setImage(bmp, bmp.width, bmp.height);
     Object.assign(state, {source: 'photo', fileName: file.name, imageBytes: buf, imageType: file.type || 'image/jpeg', synthetic: null, imageHash: await sha256Hex(buf)});
-    runPipeline(); renderScan(); resetReport();
+    runPipeline(); resetReport(); renderScan();
   } catch (e) {
-    toast('That file could not be read as a photo. Use a JPEG or PNG.');
+    toast(t('bad_file'));
   } finally { setBusy(false); }
 }
 async function loadSynthetic(scenario, seed) {
@@ -1111,53 +1399,59 @@ async function loadSynthetic(scenario, seed) {
   const buf = await blob.arrayBuffer();
   setImage(syn.canvas, syn.canvas.width, syn.canvas.height);
   Object.assign(state, {source: 'synthetic', fileName: `sample_${scenario}_${seed}.png`, imageBytes: buf, imageType: 'image/png', synthetic: syn, imageHash: await sha256Hex(buf)});
-  runPipeline(); renderScan(); resetReport(); setBusy(false);
+  runPipeline(); resetReport(); renderScan(); setBusy(false);
   return compareGT(state.result, syn);
 }
 $('inCam').onchange = e => { loadFile(e.target.files[0]); e.target.value = ''; };
 $('inFile').onchange = e => { loadFile(e.target.files[0]); e.target.value = ''; };
-$('btnSyn').onclick = () => loadSynthetic($('synScenario').value, parseInt($('synSeed').value) || 1);
-const reScan = () => { if (state.img) { runPipeline(); renderScan(); resetReport(); } };
+$('btnSyn').onclick = () => {
+  // each tap shows a different sample lot
+  const seed = $('synSeed'); const n = (parseInt(seed.value) || 1);
+  loadSynthetic($('synScenario').value, n); seed.value = n % 12 + 1;
+};
+const reScan = () => { if (state.img) { runPipeline(); resetReport(); renderScan(); } };
 $('setCard').onchange = e => { settings.cardMM = parseFloat(e.target.value) || 50; reScan(); };
 $('setManual').onchange = e => { settings.manualPxPerMm = parseFloat(e.target.value) || 0; reScan(); };
 $('setChroma').onchange = e => { settings.chromaT = +e.target.value; reScan(); };
 $('setDark').onchange = e => { settings.darkT = +e.target.value; reScan(); };
 $('btnCard').onclick = () => {
   const w = window.open('', '_blank');
-  if (!w) { toast('Allow pop-ups for this page to print the scale card.'); return; }
-  w.document.write(`<!doctype html><title>EkMaap scale card</title><style>@page{size:A4;margin:15mm}body{font:12pt Arial;margin:0}.sq{width:${settings.cardMM}mm;height:${settings.cardMM}mm;background:#000;margin:25mm auto 8mm}p{text-align:center;max-width:150mm;margin:4mm auto}</style>
-  <div class="sq"></div><p><b>EkMaap scale card, ${settings.cardMM} mm × ${settings.cardMM} mm</b></p><p>Print at 100% (actual size) and check the square with a ruler. If it is not ${settings.cardMM} mm, enter the measured side in Capture settings.</p><p>Place it flat on the grading sheet, fully visible.</p><script>setTimeout(()=>print(),300)<\/script>`);
+  if (!w) { toast(t('popup')); return; }
+  w.document.write(`<!doctype html><title>EkMaap size card</title><style>@page{size:A4;margin:15mm}body{font:14pt Arial;margin:0}.sq{width:${settings.cardMM}mm;height:${settings.cardMM}mm;background:#000;margin:25mm auto 8mm}p{text-align:center;max-width:150mm;margin:4mm auto}</style>
+  <div class="sq"></div><p><b>EkMaap size card: ${settings.cardMM} mm × ${settings.cardMM} mm</b></p><p>Print at 100% (actual size). Check the square with a ruler.</p><script>setTimeout(()=>print(),300)<\/script>`);
   w.document.close();
 };
 
-/* ---------- scan screen ---------- */
-function decidedBy(o) { return o.source === 'kNN' ? `Trained model · ${Math.round(o.conf * 100)}% vote` : 'Built-in rules'; }
+/* ---------- grade screen ---------- */
 function renderScan() {
-  const res = state.result; if (!res) return;
+  const res = state.result;
+  renderSteps();
+  if (!res) { $('resultCol').hidden = true; return; }
   draw();
   const s = res.summary, syn = state.source === 'synthetic';
-  $('srcTitle').textContent = syn ? 'Sample lot' : 'Lot sample';
-  $('srcTag').hidden = false; $('srcTag').className = 'tag' + (syn ? ' accent' : '');
-  $('srcTag').textContent = syn ? 'Simulated photo' : 'Your photo';
-  $('srcLine').textContent = `${esc(state.fileName || '')} · analysed in ${res.ms.toFixed(0)} ms`;
-  $('countLine').textContent = `${s.count} onions · by count`;
-  const keys = ['Grade A', 'URS', 'Reject', 'Review'];
-  $('distBar').innerHTML = keys.map(k => s.pct[k] ? `<i class="k-${GRADE_KEY[k]}" style="width:${s.pct[k]}%;background:var(--c)"></i>` : '').join('');
-  $('kpis').innerHTML = keys.map(k => `<div class="kpi k-${GRADE_KEY[k]}"><b>${s.pct[k].toFixed(0)}%</b><span>${k === 'Review' ? 'Review' : k}<br>${s[k]} onion${s[k] === 1 ? '' : 's'}</span></div>`).join('');
-  const scale = res.scaleSource === 'card' ? `Scale card found · <span class="mono">${res.pxPerMm.toFixed(2)}</span> px/mm`
-    : res.scaleSource === 'manual' ? `Manual · <span class="mono">${res.pxPerMm.toFixed(2)}</span> px/mm` : `<span class="warn">Scale card not found</span>`;
-  $('facts').innerHTML = `<dt>Scale</dt><dd>${scale}</dd><dt>Condition model</dt><dd>${knnReady() ? `Trained on ${state.examples.length} labels` : 'Built-in rules'}</dd>
-    <dt>Rule set</dt><dd class="mono">${esc(rules.version)}</dd><dt>Grade A from</dt><dd><span class="mono">${rules.gradeA_min_mm}</span> mm</dd>`;
-  $('onionList').innerHTML = res.onions.map(o => `<li><button class="onion${state.selected === o.id ? ' sel' : ''}" data-id="${o.id}">
-    <span class="idx k-${LABELS[o.label].key}">${o.id}</span>
-    <span><span class="t">${LABELS[o.label].name}</span><br><span class="s">${o.cond} · ${decidedBy(o)}</span></span>
-    <span class="r"><span class="mm">${o.diameter_mm != null ? o.diameter_mm.toFixed(1) + ' mm' : '—'}</span>${gradeChip(o.grade)}</span></button></li>`).join('');
+  $('resultCol').hidden = false;
+  $('srcTag').hidden = false; $('srcTag').textContent = syn ? t('sample_lot') : t('your_photo');
+  $('headline').innerHTML = esc(t('headline', {a: '\u0001', n: s.count})).replace('\u0001', `<em class="num">${s['Grade A']}</em>`);
+  $('distBar').innerHTML = GRADES.map(k => s.pct[k] ? `<i class="k-${GRADE_KEY[k]}" style="width:${s.pct[k]}%;background:var(--c)"></i>` : '').join('');
+  $('kpis').innerHTML = GRADES.map(k => `<div class="tile k-${GRADE_KEY[k]}"><b>${s.pct[k].toFixed(0)}%</b><span>${esc(gName(k))}</span><small class="num">${s[k]} / ${s.count}</small></div>`).join('');
+  const b = [];
+  if (res.scaleSource === 'none') b.push(banner('bad', esc(t('scale_missing'))));
+  b.push(s.Review ? banner('warn', esc(t('need_check', {n: s.Review}))) : banner('ok', esc(t('all_checked'))));
+  $('banners').innerHTML = b.join('');
+  // doubtful onions first, then by number
+  const list = res.onions.slice().sort((a, b) => (b.grade === 'Review') - (a.grade === 'Review') || a.id - b.id);
+  $('onionList').innerHTML = list.map(o => {
+    const ex = state.examples.find(e => e.photo === state.imageHash && e.onion === o.id);
+    return `<li><button class="onion${o.grade === 'Review' ? ' q' : ''}${state.selected === o.id ? ' sel' : ''}" data-id="${o.id}">
+    <span class="n l-${o.label}">${o.id}</span>
+    <span><span class="t">${esc(lName(o.label))}</span><span class="s">${cName(o.cond) !== lName(o.label) ? esc(cName(o.cond)) : ''}${ex ? ' ✓' : ''}</span></span>
+    <span class="r"><span class="mm">${mm(o.diameter_mm)}</span>${gradeChip(o.grade)}</span></button></li>`;
+  }).join('');
   if (!$('sheet').hidden) renderSheet();
 }
 $('onionList').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (b) openSheet(+b.dataset.id); });
 $('view').addEventListener('click', e => {
   const r = e.target.getBoundingClientRect();
-  // canvas is object-fit: contain inside the frame
   const k = Math.min(r.width / state.W, r.height / state.H), ox = (r.width - state.W * k) / 2, oy = (r.height - state.H * k) / 2;
   const x = Math.floor((e.clientX - r.left - ox) / k), y = Math.floor((e.clientY - r.top - oy) / k);
   if (x < 0 || y < 0 || x >= state.W || y >= state.H) return;
@@ -1182,28 +1476,26 @@ function renderSheet() {
   const o = state.result && state.result.onions.find(x => x.id === state.selected);
   if (!o) { closeSheet(); return; }
   const ex = state.examples.find(e => e.photo === state.imageHash && e.onion === o.id);
-  const current = ex ? ex.label : o.cond;
-  $('sheetTitle').textContent = `Onion ${o.id}`;
+  $('sheetTitle').textContent = t('onion_n', {n: o.id});
   $('sheetBody').innerHTML = `
-    <div class="row">${labelChip(o.label)} ${gradeChip(o.grade)}</div>
-    <div class="metrics">
-      <div><span>Widest diameter</span><b class="num">${o.diameter_mm != null ? o.diameter_mm.toFixed(1) + ' mm' : '—'}</b></div>
-      <div><span>Width across</span><b class="num">${o.width_mm != null ? o.width_mm.toFixed(1) + ' mm' : '—'}</b></div>
-      <div><span>Condition</span><b style="text-transform:capitalize">${o.cond}</b></div>
-      <div><span>Decided by</span><b>${o.source === 'kNN' ? 'Trained model' : 'Built-in rules'}</b></div>
+    <div class="row"><span class="chip l-${o.label}">${esc(lName(o.label))}</span> ${gradeChip(o.grade)}</div>
+    <div class="facts">
+      <div><span>${esc(t('size'))}</span><b>${o.diameter_mm != null ? o.diameter_mm.toFixed(1) + ' mm' : '—'}</b></div>
+      <div><span>${esc(t('condition'))}</span><b>${esc(cName(o.cond))}</b></div>
     </div>
-    <div><h3>Why</h3><ul class="reasons">${o.reasons.map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>
-    <div><h3>Officer decision</h3><p class="note">Confirm or correct the condition. Each decision becomes a training label.</p>
-      <div class="seg" role="group" aria-label="Condition">${CONDS.map(c => `<button data-teach="${c}" aria-pressed="${ex && current === c}">${c}</button>`).join('')}</div>
-      <p class="note" style="margin-top:6px">${ex ? `Recorded as <b>${ex.label}</b>.` : 'Not yet reviewed.'}</p></div>
-    <div><h3>Ruler check</h3><p class="note">Measured diameter with a ruler or caliper.</p>
-      <div class="inline" style="margin-top:8px"><input id="rulerIn" type="number" step="0.5" inputmode="decimal" placeholder="mm" value="${state.ruler[o.id] ?? ''}" aria-label="Ruler diameter in mm"><button class="btn" id="btnRuler">Save</button></div></div>
-    <details><summary class="eyebrow" style="cursor:pointer">Measured features</summary>
-      <div class="tablewrap" style="margin-top:8px"><table><tbody>${FEATURES.map(k => `<tr><td>${k}</td><td class="n">${o.f[k].toFixed(3)}</td></tr>`).join('')}</tbody></table></div></details>`;
+    <div class="stack" style="gap:10px"><h3>${esc(t('your_decision'))}</h3><p>${esc(t('decision_hint'))}</p>
+      <div class="choices">${CONDS.map(c => `<button class="choice c-${c}" data-teach="${c}" aria-pressed="${!!ex && ex.label === c}"><i class="dot"></i>${esc(cName(c))}</button>`).join('')}</div>
+      <p class="${ex ? 'saved' : 'muted'}">${ex ? '✓ ' + esc(t('recorded', {c: cName(ex.label)})) : esc(t('not_reviewed'))}</p></div>
+    <div class="field"><span>${esc(t('ruler'))}</span>
+      <div class="row" style="flex-wrap:nowrap"><input id="rulerIn" type="number" step="0.5" inputmode="decimal" placeholder="mm" value="${state.ruler[o.id] ?? ''}" style="flex:1;min-width:0"><button class="btn" id="btnRuler">${esc(t('save'))}</button></div></div>
+    <details class="more"><summary>${esc(t('details'))}</summary><div class="in">
+      <p class="muted">${esc(t('width'))}: ${o.width_mm != null ? o.width_mm.toFixed(1) + ' mm' : '—'} · ${esc(t('decided'))}: ${esc(o.source === 'kNN' ? t('by_model') + ' (' + Math.round(o.conf * 100) + '%)' : t('by_rules'))}</p>
+      <ul class="reasons">${o.reasons.map(r => `<li>${esc(r)}</li>`).join('')}</ul>
+      <div class="tablewrap"><table><tbody>${FEATURES.map(k => `<tr><td class="mono">${k}</td><td class="n">${o.f[k].toFixed(3)}</td></tr>`).join('')}</tbody></table></div></div></details>`;
   $('sheetBody').querySelectorAll('[data-teach]').forEach(b => b.onclick = () => teach(o, b.dataset.teach));
   $('btnRuler').onclick = () => {
     const v = parseFloat($('rulerIn').value);
-    if (isFinite(v) && v > 0) { state.ruler[o.id] = v; toast(`Ruler diameter saved for onion ${o.id}.`); } else { delete state.ruler[o.id]; }
+    if (isFinite(v) && v > 0) { state.ruler[o.id] = v; toast(t('saved_ruler')); } else { delete state.ruler[o.id]; }
   };
 }
 function teach(o, label) {
@@ -1211,59 +1503,57 @@ function teach(o, label) {
   const e = {photo: state.imageHash, onion: o.id, label, f: featVec(o.f), source: state.source};
   if (i >= 0) state.examples[i] = e; else state.examples.push(e);
   const was = knnReady();
-  regrade(); renderScan();
-  toast(knnReady() && !was ? 'Enough labels: the trained model now grades this lot.' : `Onion ${o.id} recorded as ${label}.`);
+  regrade(); resetReport(); renderScan();
+  toast(knnReady() && !was ? t('model_on') : t('saved_cond', {n: o.id, c: cName(label)}));
 }
 
 /* ---------- rules ---------- */
-function fillRules() {
-  for (const k of Object.keys(DEFAULT_RULES)) { const el = $('r_' + k); if (el) el.value = rules[k]; }
-  $('rulesJson').textContent = JSON.stringify(rules, null, 2);
+const MAPS = [['map_sprouted', 'sprouted'], ['map_damaged', 'damaged'], ['map_rotten', 'rotten']];
+function buildMapFields() {
+  $('mapFields').innerHTML = MAPS.map(([k, c]) => `<label class="field"><span>${esc(cName(c))}</span><select id="r_${k}">${['URS', 'Reject'].map(g => `<option value="${g}">${esc(gName(g))}</option>`).join('')}</select></label>`).join('');
+  fillRules();
 }
+function fillRules() { for (const k of Object.keys(DEFAULT_RULES)) { const el = $('r_' + k); if (el) el.value = rules[k]; } }
 $('btnApplyRules').onclick = () => {
   const next = {...rules};
   for (const k of Object.keys(DEFAULT_RULES)) { const el = $('r_' + k); if (!el) continue; next[k] = typeof DEFAULT_RULES[k] === 'number' ? parseFloat(el.value) : el.value.trim(); }
-  if (!(next.urs_min_mm > 0) || !(next.gradeA_min_mm > 0) || next.urs_min_mm > next.gradeA_min_mm) { toast('URS minimum must be above 0 and not larger than the Grade A minimum.'); return; }
-  rules = next; fillRules(); regrade(); renderScan(); resetReport(); toast(`Rule set ${rules.version} applied. The lot was re-graded.`);
+  if (!(next.urs_min_mm > 0) || !(next.gradeA_min_mm > 0) || next.urs_min_mm > next.gradeA_min_mm) { toast(t('rules_err')); return; }
+  rules = next; fillRules(); regrade(); resetReport(); renderScan(); toast(t('rules_applied'));
 };
-$('btnResetRules').onclick = () => { rules = JSON.parse(JSON.stringify(DEFAULT_RULES)); fillRules(); regrade(); renderScan(); resetReport(); toast('Default rule set restored.'); };
-$('btnExportRules').onclick = () => download(`ekmaap_rules_${rules.version}.json`, JSON.stringify(rules, null, 2));
+$('btnResetRules').onclick = () => { rules = JSON.parse(JSON.stringify(DEFAULT_RULES)); fillRules(); regrade(); resetReport(); renderScan(); toast(t('rules_applied')); };
 
 /* ---------- accuracy ---------- */
-function renderAccuracy() { renderExamples(); renderSizeEval(); renderGT(); }
+function renderAccuracy() { renderExamples(); renderSizeEval(); renderGT(); $('evalOut').innerHTML = ''; }
 function renderExamples() {
   const cnt = {}; for (const e of state.examples) cnt[e.label] = (cnt[e.label] || 0) + 1;
   const photos = new Set(state.examples.map(e => e.photo)).size;
-  $('exSummary').innerHTML = `<div class="tiles">${CONDS.map(c => `<div class="tile"><b>${cnt[c] || 0}</b><span>${c[0].toUpperCase() + c.slice(1)}</span></div>`).join('')}</div>
-    <p class="note" style="margin-top:10px">${state.examples.length} labels from ${photos} photo${photos === 1 ? '' : 's'}. ${knnReady() ? '<span class="state-ok">The trained model is grading.</span>' : `The trained model starts at 8 labels with ${rules.knn_min_per_class} or more in at least two conditions.`}</p>`;
+  $('exSummary').innerHTML = `<div class="tiles">${CONDS.map(c => `<div class="tile c-${c}"><b>${cnt[c] || 0}</b><span>${esc(cName(c))}</span></div>`).join('')}</div>
+    <p class="muted" style="margin-top:10px">${esc(t('answers_saved', {n: state.examples.length, p: photos}))}</p>`;
 }
 function renderSizeEval() {
   const res = state.result;
   const rows = res ? res.onions.filter(o => state.ruler[o.id] != null && o.diameter_mm != null).map(o => ({id: o.id, app: o.diameter_mm, ruler: state.ruler[o.id], err: o.diameter_mm - state.ruler[o.id]})) : [];
-  if (!rows.length) { $('sizeEval').innerHTML = '<p class="note">No ruler measurements for this photo yet.</p>'; return; }
+  if (!rows.length) { $('sizeEval').innerHTML = `<p class="muted">${esc(t('ruler_none'))}</p>`; return; }
   const mae = rows.reduce((s, r) => s + Math.abs(r.err), 0) / rows.length;
-  $('sizeEval').innerHTML = `<div class="row" style="align-items:baseline;gap:10px"><span class="big">${mae.toFixed(1)} mm</span><span class="note">mean error over ${rows.length} onion${rows.length === 1 ? '' : 's'}</span></div>
-    <div class="tablewrap"><table><thead><tr><th>Onion</th><th class="n">App</th><th class="n">Ruler</th><th class="n">Error</th></tr></thead><tbody>
+  $('sizeEval').innerHTML = `<p><span class="headline num">${mae.toFixed(1)} mm</span> <span class="muted">${esc(t('avg_diff'))}</span></p>
+    <div class="tablewrap"><table><thead><tr><th>#</th><th class="n">App</th><th class="n">${esc(t('ruler_title'))}</th><th class="n">±</th></tr></thead><tbody>
     ${rows.map(r => `<tr><td>${r.id}</td><td class="n">${r.app.toFixed(1)}</td><td class="n">${r.ruler.toFixed(1)}</td><td class="n">${r.err >= 0 ? '+' : ''}${r.err.toFixed(1)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 $('btnEval').onclick = () => {
   const r = evaluate();
-  if (r.error) { $('evalOut').innerHTML = `<p class="note">Record at least 4 officer decisions first (Scan → tap an onion).</p>`; return; }
-  $('evalOut').innerHTML = `<div class="row" style="align-items:baseline;gap:10px"><span class="big">${pct(r.accuracy)}</span><span class="note">accuracy · ${r.tested} labels · ${esc(r.scheme)}</span></div>
-    <div class="tablewrap"><table><thead><tr><th>True \\ predicted</th>${CONDS.map(c => `<th class="n">${c}</th>`).join('')}<th class="n">Recall</th><th class="n">Precision</th></tr></thead><tbody>
-    ${r.per.map(p => `<tr><th style="text-transform:capitalize">${p.cond}</th>${CONDS.map(b => `<td class="n">${r.cm[p.cond][b]}</td>`).join('')}<td class="n">${pct(p.recall)}</td><td class="n">${pct(p.precision)}</td></tr>`).join('')}</tbody></table></div>
-    <p class="note">Built-in rules agree with these labels on ${pct(r.heuristicAgreement)}.${r.n < 30 ? ' Collect 30 or more labels for a stable figure.' : ''}</p>`;
+  if (r.error) { $('evalOut').innerHTML = banner('warn', esc(t('eval_need'))); return; }
+  $('evalOut').innerHTML = `<p><span class="headline num">${pct(r.accuracy)}</span> <span class="muted">${esc(t('correct'))} · ${r.tested}</span></p>
+    <div class="tablewrap" style="margin-top:10px"><table><thead><tr><th>${esc(t('condition'))}</th><th class="n">n</th><th class="n">${esc(t('correct'))}</th></tr></thead><tbody>
+    ${r.per.map(p => `<tr><td>${esc(cName(p.cond))}</td><td class="n">${p.n}</td><td class="n">${pct(p.recall)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="muted mono" style="margin-top:8px">${esc(r.scheme)}</p>`;
 };
 function renderGT() {
-  if (state.source !== 'synthetic' || !state.synthetic || !state.result) { $('gtOut').innerHTML = '<p class="note">Load a sample lot on the Scan screen to compare against known values.</p>'; return; }
+  if (state.source !== 'synthetic' || !state.synthetic || !state.result) { $('gtOut').innerHTML = `<p class="muted">${esc(t('sample_hint'))}</p>`; return; }
   const c = compareGT(state.result, state.synthetic);
   $('gtOut').innerHTML = `<div class="tiles">
-      <div class="tile"><b>${c.matched}/${c.truth}</b><span>onions found</span></div>
-      <div class="tile"><b>${c.extra}</b><span>extra objects</span></div>
-      <div class="tile"><b>${c.sizeMAE != null ? c.sizeMAE.toFixed(1) : '—'}</b><span>mm size error</span></div>
-      <div class="tile"><b>${c.labelAgree != null ? Math.round(100 * c.labelAgree) + '%' : '—'}</b><span>labels match</span></div></div>
-    <div class="tablewrap"><table><thead><tr><th>Known condition</th><th class="n">Known mm</th><th>Found as</th><th class="n">App mm</th></tr></thead><tbody>
-    ${c.rows.map(r => `<tr><td style="text-transform:capitalize">${r.g.cond}</td><td class="n">${r.g.d_mm.toFixed(1)}</td><td>${r.o ? r.o.id + ' ' + labelChip(r.o.label) : '<span class="state-bad">not found</span>'}</td><td class="n">${r.o && r.o.diameter_mm != null ? r.o.diameter_mm.toFixed(1) : '—'}</td></tr>`).join('')}</tbody></table></div>`;
+      <div class="tile k-a"><b class="num">${c.matched}/${c.truth}</b><span>${esc(t('found'))}</span></div>
+      <div class="tile k-urs"><b class="num">${c.sizeMAE != null ? c.sizeMAE.toFixed(1) : '—'}</b><span>${esc(t('mm_diff'))}</span></div>
+      <div class="tile k-q"><b class="num">${c.labelAgree != null ? Math.round(100 * c.labelAgree) + '%' : '—'}</b><span>${esc(t('match'))}</span></div></div>`;
 }
 $('btnExportEx').onclick = () => download('ekmaap_labels.json', JSON.stringify({features: FEATURES, examples: state.examples}, null, 1));
 $('inEx').onchange = async e => {
@@ -1273,62 +1563,73 @@ $('inEx').onchange = async e => {
     if (!Array.isArray(j.examples) || String(j.features) !== String(FEATURES)) throw 0;
     const key = x => x.photo + '#' + x.onion, have = new Set(state.examples.map(key));
     let n = 0; for (const x of j.examples) if (!have.has(key(x))) { state.examples.push(x); n++; }
-    regrade(); renderScan(); renderExamples(); toast(`${n} labels loaded.`);
-  } catch (err) { toast('That file is not an EkMaap labels file.'); }
+    regrade(); renderScan(); renderExamples(); toast(t('loaded', {n}));
+  } catch (err) { toast(t('bad_labels')); }
   e.target.value = '';
 };
 $('btnClearEx').onclick = () => { $('clearConfirm').hidden = false; };
 $('btnClearNo').onclick = () => { $('clearConfirm').hidden = true; };
-$('btnClearYes').onclick = () => { state.examples = []; $('clearConfirm').hidden = true; regrade(); renderScan(); renderExamples(); toast('Labels cleared.'); };
+$('btnClearYes').onclick = () => { state.examples = []; $('clearConfirm').hidden = true; regrade(); renderScan(); renderExamples(); toast(t('cleared')); };
 
 /* ---------- report ---------- */
 function resetReport() {
   state.record = null;
-  $('reportDoc').innerHTML = '<div class="placeholder">The issued report appears here.</div>';
-  ['btnPrint', 'btnDlRecord', 'btnDlImg'].forEach(id => $(id).disabled = true);
+  $('reportDoc').innerHTML = `<div class="placeholder">${esc(t('report_placeholder'))}</div>`;
+  $('reportActions').hidden = true;
 }
 async function renderReport() {
   const rec = await buildRecord(); state.record = rec;
-  const img = $('view').toDataURL('image/jpeg', 0.85), s = rec.summary;
-  const when = new Date(rec.created_at);
-  const keys = ['Grade A', 'URS', 'Reject', 'Review'], cnt = {'Grade A': s.grade_a, URS: s.urs, Reject: s.reject, Review: s.review};
-  $('reportDoc').innerHTML = `<div class="doc">
-    <div class="doc-head"><div><p class="eyebrow">EkMaap · onion quality report</p><h2>Lot ${esc(rec.lot.id || 'unnamed')}</h2>
-      <p class="note">${when.toLocaleDateString()} ${when.toLocaleTimeString()}${rec.image.source === 'synthetic' ? ' · sample lot' : ''}</p></div><div id="qr"></div></div>
-    <div class="doc-meta">
-      <div><span>Centre</span>${esc(rec.lot.centre || '—')}</div><div><span>Officer</span>${esc(rec.lot.officer || '—')}</div>
-      <div><span>Farmer</span>${esc(rec.lot.farmer || '—')}</div><div><span>Location</span>${rec.gps ? `<span class="mono" style="display:inline;text-transform:none;letter-spacing:0;font-size:.86rem;color:var(--ink)">${rec.gps.lat.toFixed(5)}, ${rec.gps.lon.toFixed(5)}</span>` : '—'}</div></div>
-    <div class="dist" style="margin:0 0 10px">${keys.map(k => s.pct[k] ? `<i class="k-${GRADE_KEY[k]}" style="width:${s.pct[k]}%;background:var(--c)"></i>` : '').join('')}</div>
-    <div class="kpis" style="padding:0 0 14px">${keys.map(k => `<div class="kpi k-${GRADE_KEY[k]}"><b>${s.pct[k].toFixed(1)}%</b><span>${k === 'Review' ? 'Officer review' : k} · ${cnt[k]}</span></div>`).join('')}</div>
-    <img src="${img}" alt="Annotated sample photo">
-    <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>#</th><th>Label</th><th>Grade</th><th class="n">Diameter</th><th>Decided by</th></tr></thead><tbody>
-    ${rec.onions.map(o => `<tr><td>${o.id}</td><td>${o.label}</td><td>${o.grade}</td><td class="n">${o.diameter_mm ?? '—'} mm</td><td>${o.decided_by === 'kNN' ? 'Trained model' : 'Built-in rules'}</td></tr>`).join('')}</tbody></table></div>
-    <p class="note" style="margin-top:12px">${s.count} onions, percentages by count. Rule set <span class="mono">${esc(rec.rules.version)}</span>: Grade A ≥ ${rec.rules.gradeA_min_mm} mm, URS ≥ ${rec.rules.urs_min_mm} mm; damaged → ${rec.rules.map_damaged}, sprouted → ${rec.rules.map_sprouted}, rotten → ${rec.rules.map_rotten}.</p>
-    <div style="margin-top:12px"><p class="eyebrow">Photo fingerprint (SHA-256)</p><p class="hash">${rec.image.sha256}</p>
-      <p class="eyebrow" style="margin-top:8px">Record fingerprint (SHA-256)</p><p class="hash">${rec.record_sha256}</p></div>
-    <div class="sign"><div>Officer signature</div><div>Farmer signature</div></div></div>`;
-  if (window.QRCode) { try { new QRCode($('qr'), {text: `EKMAAP:${rec.record_sha256}`, width: 104, height: 104}); } catch (e) { $('qr').hidden = true; } }
-  else $('qr').hidden = true;
-  ['btnPrint', 'btnDlRecord', 'btnDlImg'].forEach(id => $(id).disabled = false);
+  state.recordImg = $('view').toDataURL('image/jpeg', 0.85);
+  renderReportDoc(rec); renderSteps();
   return rec;
 }
+/* the record itself stays in English (its fingerprint must not depend on the reader's language); only the page is translated */
+const LNAME = Object.fromEntries(Object.entries(LABELS).map(([k, v]) => [v.name, k]));
+function renderReportDoc(rec) {
+  const s = rec.summary, when = new Date(rec.created_at);
+  const cnt = {'Grade A': s.grade_a, URS: s.urs, Reject: s.reject, Review: s.review};
+  const toGrade = {}; for (const o of state.result ? state.result.onions : []) toGrade[o.id] = o;
+  $('reportDoc').innerHTML = `<div class="doc">
+    <div class="doc-head"><div><p class="k">EkMaap · ${esc(t('report_title'))}</p><h2>${esc(t('lot'))} ${esc(rec.lot.id || '—')}</h2>
+      <p class="muted">${when.toLocaleDateString(lang === 'en' ? 'en-IN' : lang + '-IN')} ${when.toLocaleTimeString(lang === 'en' ? 'en-IN' : lang + '-IN', {hour: '2-digit', minute: '2-digit'})}${rec.image.source === 'synthetic' ? ' · ' + esc(t('sample_lot')) : ''}</p></div><div id="qr"></div></div>
+    <p class="headline">${esc(t('headline', {a: s.grade_a, n: s.count}))}</p>
+    <div class="doc-meta">
+      <div><span>${esc(t('centre'))}</span><b>${esc(rec.lot.centre || '—')}</b></div><div><span>${esc(t('officer'))}</span><b>${esc(rec.lot.officer || '—')}</b></div>
+      <div><span>${esc(t('farmer'))}</span><b>${esc(rec.lot.farmer || '—')}</b></div><div><span>${esc(t('location'))}</span><b class="num">${rec.gps ? rec.gps.lat.toFixed(5) + ', ' + rec.gps.lon.toFixed(5) : '—'}</b></div></div>
+    <div class="bar">${GRADES.map(k => s.pct[k] ? `<i class="k-${GRADE_KEY[k]}" style="width:${s.pct[k]}%;background:var(--c)"></i>` : '').join('')}</div>
+    <div class="tiles">${GRADES.map(k => `<div class="tile k-${GRADE_KEY[k]}"><b>${s.pct[k].toFixed(1)}%</b><span>${esc(gName(k))}</span><small class="num">${cnt[k]} / ${s.count}</small></div>`).join('')}</div>
+    <img src="${state.recordImg || ''}" alt="">
+    <div class="tablewrap"><table><thead><tr><th>#</th><th>${esc(t('condition'))}</th><th class="n">${esc(t('size'))}</th><th>${esc(t('nav_grade'))}</th></tr></thead><tbody>
+    ${rec.onions.map(o => `<tr><td>${o.id}</td><td>${esc(LNAME[o.label] ? lName(LNAME[o.label]) : cName(o.condition))}</td><td class="n">${o.diameter_mm ?? '—'} mm</td><td>${gradeChip(o.grade)}</td></tr>`).join('')}</tbody></table></div>
+    <p class="muted">${esc(t('by_count'))} ${esc(t('rules_line', {a: rec.rules.gradeA_min_mm, u: rec.rules.urs_min_mm}))} · <span class="mono">${esc(rec.rules.version)}</span></p>
+    <div class="stack" style="gap:6px"><p><b>${esc(t('photo_fp'))}</b></p><p class="fp">${rec.image.sha256}</p>
+      <p><b>${esc(t('record_fp'))}</b></p><p class="fp">${rec.record_sha256}</p></div>
+    <div class="sign"><div>${esc(t('sign_officer'))}</div><div>${esc(t('sign_farmer'))}</div></div></div>`;
+  if (window.QRCode) { try { new QRCode($('qr'), {text: `EKMAAP:${rec.record_sha256}`, width: 104, height: 104}); } catch (e) { $('qr').hidden = true; } }
+  else $('qr').hidden = true;
+  $('reportActions').hidden = false;
+}
 $('btnGps').onclick = () => {
-  if (!navigator.geolocation) { $('gpsOut').textContent = 'Location is not available in this browser.'; return; }
-  $('gpsOut').textContent = 'Finding location…';
+  if (!navigator.geolocation) { $('gpsOut').textContent = t('no_gps'); return; }
+  $('gpsOut').textContent = t('locating');
   navigator.geolocation.getCurrentPosition(p => { state.gps = {lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy}; $('gpsOut').textContent = `${state.gps.lat.toFixed(5)}, ${state.gps.lon.toFixed(5)} (±${Math.round(state.gps.acc)} m)`; resetReport(); },
-    err => { $('gpsOut').textContent = 'Location unavailable: ' + err.message; }, {enableHighAccuracy: true, timeout: 10000});
+    () => { $('gpsOut').textContent = t('no_gps'); }, {enableHighAccuracy: true, timeout: 10000});
 };
-$('btnReport').onclick = async () => { if (!state.result) { toast('Scan a lot first.'); return; } await renderReport(); toast('Report issued.'); };
+$('btnReport').onclick = async () => {
+  if (!state.result) { toast(t('scan_first')); show('grade'); return; }
+  await renderReport(); toast(t('issued'));
+  if (innerWidth < 960) $('reportDoc').scrollIntoView({behavior: 'smooth', block: 'start'});
+};
 $('btnPrint').onclick = () => window.print();
 $('btnDlRecord').onclick = () => state.record && download(`ekmaap_${state.record.lot.id || 'lot'}_${state.record.record_sha256.slice(0, 8)}.json`, JSON.stringify(state.record, null, 1));
 $('btnDlImg').onclick = () => state.imageBytes && download(state.fileName || 'photo', new Blob([state.imageBytes], {type: state.imageType}));
 $('btnVerify').onclick = async () => {
   const rf = $('vRec').files[0], imf = $('vImg').files[0];
-  if (!rf) { $('verifyOut').innerHTML = '<p class="state-bad">Choose a record file.</p>'; return; }
+  if (!rf) { $('verifyOut').innerHTML = banner('warn', esc(t('choose_record'))); return; }
   const v = await verify(await rf.text(), imf ? await imf.arrayBuffer() : null);
-  if (v.msg) { $('verifyOut').innerHTML = `<p class="state-bad">${v.msg}</p>`; return; }
-  $('verifyOut').innerHTML = `<p>Record: ${v.recordOK ? '<span class="state-ok">unchanged since issue</span>' : '<span class="state-bad">changed after issue</span>'}</p>
-    <p>Photo: ${v.imageOK == null ? '<span class="muted">not checked</span>' : v.imageOK ? '<span class="state-ok">same photo</span>' : '<span class="state-bad">different photo</span>'}</p>`;
+  if (v.msg) { $('verifyOut').innerHTML = banner('bad', esc(t('verify_bad'))); return; }
+  $('verifyOut').innerHTML = (v.recordOK ? banner('ok', esc(t('verify_ok'))) : banner('bad', esc(t('verify_bad'))))
+    + (v.imageOK == null ? `<p class="muted">${esc(t('photo_nc'))}</p>` : v.imageOK ? banner('ok', esc(t('photo_ok'))) : banner('bad', esc(t('photo_bad'))));
 };
 
 /* ---------- hooks for automated tests ---------- */
@@ -1341,10 +1642,13 @@ EK.teachFromTruth = function () {
   return n;
 };
 EK.buildRecord = buildRecord; EK.renderReport = renderReport; EK.verify = verify; EK.canonical = canonical;
+EK.setLang = l => { langSel.value = l; langSel.onchange(); };
 
 /* ---------- start in a working state ---------- */
-fillRules();
-loadSynthetic('mixed', 2);
+applyLang(); buildMapFields();
+$('gpsOut').textContent = t('no_location');
+resetReport();
+loadSynthetic('mixed', 2).then(() => { $('synSeed').value = 3; });
 
 </script>
 </body>
