@@ -1,0 +1,16 @@
+{
+  "name": "EkMaap officer app",
+  "short_name": "EkMaap",
+  "description": "One photo of a sample, every onion measured, a verifiable grading report.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EEF2F6",
+  "theme_color": "#1F3864",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
