@@ -15,7 +15,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python -m pytest tests/test_core.py -q
+      - run: python -m pytest tests/test_core.py tests/test_feature_*.py -q
 
   api:
     name: API + schema tests (PostgreSQL 16)

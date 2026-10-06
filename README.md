@@ -46,7 +46,7 @@ An officer lays a sample on a mat, takes **one photo**, and EkMaap:
 
 | Design choice | Why |
 | --- | --- |
-| **Works in any phone browser** — the demo is one HTML file, no install | Procurement centres cannot be asked to install an app or buy hardware |
+| **Works in any phone browser** — the demo is one HTML file, no install; the officer app installs to the home screen as a PWA | Procurement centres cannot be asked to install an app or buy hardware |
 | **Seven languages** (English, Hindi, Marathi, Gujarati, Tamil, Telugu, Kannada), large touch targets, text-size control, light high-contrast theme | The person at the counter is often older, reading in sunlight, and not working in English |
 | **Unsure → officer.** Borderline onions are never silently graded | A wrong grade costs a farmer money; a flag costs seconds |
 | **The grading rules are data, not code** (versioned rule sets) | The official specification is not public; rules must change without a software release |
@@ -59,6 +59,7 @@ An officer lays a sample on a mat, takes **one photo**, and EkMaap:
 1. Open the **[live prototype](https://ekmaap-dpkgd4vhdlxl.edgeone.dev)** (or open `demo/EkMaap_demo.html` locally — no server needed). Prefer to watch first? Here is the **[demo video](https://youtu.be/KJd_V0TRp50)**.
 2. Pick a language from the top bar.
 3. **Grade a lot → Try a sample.** A synthetic photo is analysed in your browser; tap any onion to see why it got its label.
+   With *your own* photo the app first checks sharpness, light, glare and size, and says what to fix before you rely on the result.
 4. **Next: make report → Issue report.** Open the **Report** tab, then use the **Verify** card to confirm the fingerprint — and try editing a number to watch verification fail.
 
 <div align="center">
@@ -131,8 +132,11 @@ flowchart LR
 | **API** (`backend/app/`) | FastAPI, 45 endpoints, roles: officer / supervisor / labeller / admin, public report verification |
 | **Database** (`db/schema.sql`) | PostgreSQL 14+, 15 tables, append-only history, one active rule set and one active model per kind enforced by partial unique indexes |
 | **Security** | PBKDF2 password hashes, HMAC-signed expiring tokens, role checks on every endpoint, farmer details refused without recorded consent (DPDP Act 2023), audit log |
+| **Extra modules** (`ekmaap/`) | lot-level pooling with a 95 % interval (`sampling`), CSV/text export (`export`), photo-quality gate (`quality_checks`), rule-set JSON import and diff (`rules_io`), size distribution (`size_stats`), grader agreement and kappa (`agreement`) — see [docs/features.md](docs/features.md) |
 
-Deeper docs: [architecture](docs/architecture.md) · [database](docs/database.md) · [API](docs/api.md) · [training](docs/training.md) · [OpenAPI spec](docs/openapi.json)
+Deeper docs: [architecture](docs/architecture.md) · [database](docs/database.md) · [API](docs/api.md) · [training](docs/training.md) · [extra modules](docs/features.md) · [OpenAPI spec](docs/openapi.json)
+
+Field work and review: [field research plan](docs/field-research-plan.md) · [phone test plan](docs/test-plan.md) · [jury Q&A](docs/qa-preparation.md) · [language review](docs/language-review/)
 
 ## Repository map
 
@@ -140,7 +144,7 @@ Deeper docs: [architecture](docs/architecture.md) · [database](docs/database.md
 ekmaap/         the pipeline, shared by API and training: calibration, segmentation, measure, features,
                 classifier, rules, pipeline, dataset, evaluate, coco, synth (synthetic test images)
 backend/        FastAPI app: models, routers, services (engine, reports), security, storage
-frontend/       officer web app, served by the API at /
+frontend/       officer web app (installable PWA: manifest, service worker, icons), served by the API at /
 scripts/        make_mat, prelabel, train_segmenter, train_classifier, fit_size_calibration, evaluate,
                 coco_to_yolo, train_yolo_seg (GPU, optional), seed_demo, make_synthetic, dump_api
 db/             schema.sql, generated from backend/app/models.py (a test fails if they drift)
@@ -177,6 +181,9 @@ make synthetic && make train D=data/synthetic && make evaluate D=data/synthetic
 ```
 
 **Tests** — `EKMAAP_TEST_DATABASE_URL=postgresql+psycopg://user@localhost/ekmaap_test python -m pytest -q` (the test database is wiped). Browser-demo tests: `cd demo && node test2.mjs` (needs Node + Playwright + Chromium).
+
+### Status of the new material
+`docs/language-review/` holds every screen text with its current translation; the translations were drafted with machine help and the review columns are **not yet filled in by a native speaker**. `docs/test-plan.md` and `docs/field-research-plan.md` are plans with empty result tables: no procurement-centre visit or real-phone test has been recorded yet. The six extra modules pass their own unit tests but are **not yet wired into the API or the officer app**.
 
 ### Not yet exercised
 `docker compose` image build; YOLO-seg training/inference (PyTorch is not part of the test environment); a real CVAT export; anything on **real** onions.
