@@ -15,7 +15,7 @@ Department of Consumer Affairs, Ministry of Consumer Affairs, Food and Public Di
 ![Languages](https://img.shields.io/badge/UI%20languages-7-7A1C3B)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-**[▶ Open the live demo](https://kartikpathak100.github.io/ekmaap/)** &nbsp;·&nbsp; [Final report (PDF)](report/EkMaap_SIH26031_Final_Report.pdf) &nbsp;·&nbsp; [Pitch deck](presentation/SIH26031_StrataCadastre_KP_v4.pdf) &nbsp;·&nbsp; [Architecture](docs/architecture.md)
+**[▶ Live prototype](https://ekmaap-dpkgd4vhdlxl.edgeone.dev)** &nbsp;·&nbsp; **[Demo video](https://youtu.be/KJd_V0TRp50)** &nbsp;·&nbsp; [Pitch deck](presentation/SIH26031_StrataCadastre_KP_v4_c.pdf) &nbsp;·&nbsp; [Detailed report](https://drive.google.com/file/d/1Ka1DfIvknk3eUXJqtQFi0SdRx-n0u9My/view?usp=drive_link) &nbsp;·&nbsp; [Architecture](docs/architecture.md)
 
 <img src="docs/images/phones.png" alt="EkMaap on a phone in Hindi, Tamil, Marathi and English" width="820">
 
@@ -56,7 +56,7 @@ An officer lays a sample on a mat, takes **one photo**, and EkMaap:
 
 ## Try it in 60 seconds
 
-1. Open the **[live demo](https://kartikpathak100.github.io/ekmaap/)** (or open `demo/EkMaap_demo.html` locally — no server needed).
+1. Open the **[live prototype](https://ekmaap-dpkgd4vhdlxl.edgeone.dev)** (or open `demo/EkMaap_demo.html` locally — no server needed). Prefer to watch first? Here is the **[demo video](https://youtu.be/KJd_V0TRp50)**.
 2. Pick a language from the top bar.
 3. **Grade a lot → Try a sample.** A synthetic photo is analysed in your browser; tap any onion to see why it got its label.
 4. **Next: make report → Issue report.** Open the **Report** tab, then use the **Verify** card to confirm the fingerprint — and try editing a number to watch verification fail.
@@ -64,6 +64,16 @@ An officer lays a sample on a mat, takes **one photo**, and EkMaap:
 <div align="center">
 <img src="docs/images/portal.png" alt="EkMaap portal landing page" width="760">
 </div>
+
+## Links
+
+| | |
+| --- | --- |
+| Live prototype | https://ekmaap-dpkgd4vhdlxl.edgeone.dev |
+| Demo video | https://youtu.be/KJd_V0TRp50 |
+| Pitch deck (SIH26031) | [`presentation/SIH26031_StrataCadastre_KP_v4_c.pdf`](presentation/SIH26031_StrataCadastre_KP_v4_c.pdf) |
+| Detailed report | [Google Drive](https://drive.google.com/file/d/1Ka1DfIvknk3eUXJqtQFi0SdRx-n0u9My/view?usp=drive_link) · copy in this repo: [`report/`](report/EkMaap_SIH26031_Final_Report.pdf) |
+| Offline field-research report | [Google Docs](https://docs.google.com/document/d/1WmWQ6UP59DNOaP5_-ENXJyICKLYLWO29/edit?usp=drive_link) |
 
 ## What we measured
 
@@ -137,7 +147,7 @@ db/             schema.sql, generated from backend/app/models.py (a test fails i
 tests/          pytest: pipeline on synthetic photos + full API workflow on PostgreSQL
 demo/           EkMaap_demo.html — standalone client-side demo (7 languages, accessible portal design),
                 its Playwright test scripts and test_results.json; offline_demo_v0.html is the superseded first version
-presentation/   the SIH pitch deck
+presentation/   the SIH pitch deck (PDF)
 report/         the final project report (PDF)
 notebooks/      Colab notebook for the optional GPU model
 ```
@@ -169,7 +179,7 @@ make synthetic && make train D=data/synthetic && make evaluate D=data/synthetic
 **Tests** — `EKMAAP_TEST_DATABASE_URL=postgresql+psycopg://user@localhost/ekmaap_test python -m pytest -q` (the test database is wiped). Browser-demo tests: `cd demo && node test2.mjs` (needs Node + Playwright + Chromium).
 
 ### Not yet exercised
-`docker compose` image build; YOLO-seg training/inference (no PyTorch available while building); a real CVAT export; anything on **real** onions.
+`docker compose` image build; YOLO-seg training/inference (PyTorch is not part of the test environment); a real CVAT export; anything on **real** onions.
 
 ## Team
 

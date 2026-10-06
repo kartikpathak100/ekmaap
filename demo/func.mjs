@@ -1,5 +1,5 @@
-import pw from '/home/claude/.npm-global/lib/node_modules/playwright/index.js'; const {chromium}=pw;
-const b = await chromium.launch({executablePath:'/opt/pw-browsers/chromium'}); const p = await b.newPage(); const errs=[]; p.on('pageerror',e=>errs.push(e.message));
+import { chromium } from 'playwright';
+const b = await chromium.launch(); const p = await b.newPage(); const errs=[]; p.on('pageerror',e=>errs.push(e.message));
 await p.goto('file://'+process.cwd()+'/EkMaap_demo.html'); await p.waitForTimeout(1000);
 const r = await p.evaluate(async()=>{ let t=0,m=0,ok=0; for(const sc of ['mixed','touching']) for(let s=1;s<=5;s++){ const c=await EK.loadSynthetic(sc,s); t+=c.truth; m+=c.matched; ok+=c.rows.filter(x=>x.o&&x.o.label===x.g.label).length; }
   document.getElementById('lotId').value='T1'; const rec=await EK.renderReport(); const txt=JSON.stringify(rec);

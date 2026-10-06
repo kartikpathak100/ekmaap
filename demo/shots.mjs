@@ -1,5 +1,5 @@
-import pw from '/home/claude/.npm-global/lib/node_modules/playwright/index.js'; const {chromium}=pw;
-const b = await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+import { chromium } from 'playwright';
+const b = await chromium.launch();
 const errs=[];
 for (const [name,vp,lg] of [['desk-en',{width:1366,height:900},'en'],['phone-hi',{width:390,height:844},'hi'],['phone-ta',{width:360,height:780},'ta'],['desk-mr',{width:1366,height:900},'mr'],['phone-te',{width:390,height:844},'te'],['phone-gu',{width:390,height:844},'gu'],['phone-kn',{width:360,height:780},'kn']]) {
   const p = await b.newPage({viewport:vp, deviceScaleFactor:1.5});

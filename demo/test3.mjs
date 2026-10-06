@@ -1,6 +1,6 @@
-import pw from '/home/claude/.npm-global/lib/node_modules/playwright/index.js'; const {chromium}=pw;
+import { chromium } from 'playwright';
 import fs from 'fs';
-const b = await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+const b = await chromium.launch();
 const p = await b.newPage();
 await p.goto('file://'+process.cwd()+'/EkMaap_demo.html');
 // size error by condition (mixed, 20 seeds)
