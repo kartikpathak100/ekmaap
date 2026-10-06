@@ -16,7 +16,7 @@
    "cardFound": 20,
    "sizeMAE": 0.3160931997972413,
    "sizeBias": 0.30851006321458435,
-   "medianMs": 280.69999999995343
+   "medianMs": 284.19999999995343
   },
   "touching": {
    "images": 20,
@@ -34,7 +34,7 @@
    "cardFound": 20,
    "sizeMAE": 0.2592266634238174,
    "sizeBias": 0.05642411854681009,
-   "medianMs": 343.39999999990687
+   "medianMs": 332
   }
  },
  "knn": {
@@ -72,7 +72,7 @@
   "synthetic": 110
  },
  "report": {
-  "hash": "1b38160d88d00b7de4e1e4f72837687d0388eceddee2382289bc0433c3c9c10f",
+  "hash": "d7dbf260d27798f78fb9231c6ec0012e04b2426f7f0ac51063554ea2f6251609",
   "good": [
    true,
    true

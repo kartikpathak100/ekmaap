@@ -1125,7 +1125,7 @@ function setImage(src, w, h) {
   const s = Math.min(1, settings.maxDim / Math.max(w, h)), W = Math.round(w * s), H = Math.round(h * s);
   const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
   x.drawImage(src, 0, 0, W, H);
-  Object.assign(state, {W, H, img: x.getImageData(0, 0, W, H), lab: null, scaleFactor: s, selected: -1, ruler: {}, record: null});
+  Object.assign(state, {W, H, origW: w, origH: h, img: x.getImageData(0, 0, W, H), lab: null, scaleFactor: s, selected: -1, ruler: {}, record: null});
 }
 async function buildRecord() {
   const res = state.result; if (!res) throw new Error('No scan yet');
@@ -1158,6 +1158,7 @@ async function verify(recText, imgBuf) {
 const LANGS = {en: 'English', hi: 'हिन्दी', mr: 'मराठी', gu: 'ગુજરાતી', ta: 'தமிழ்', te: 'తెలుగు', kn: 'ಕನ್ನಡ'};
 const I18N = {
 en: {
+  q_small: 'Photo is small. Move closer and use the normal camera.', q_blur: 'Photo looks blurred. Hold the phone steady and tap the screen to focus.', q_dark: 'Photo is too dark. Move to better light.', q_bright: 'Photo is too bright. Avoid direct sunlight on the sheet.', q_glare: 'Glare or shiny patches. Change the angle away from lamps and windows.',
   app_sub: 'Onion quality grading', lang: 'Language',
   nav_grade: 'Grade', nav_report: 'Report', nav_settings: 'Settings',
   step1: 'Take photo', step2: 'Check onions', step3: 'Issue report',
@@ -1204,6 +1205,7 @@ en: {
   h5: 'You check any doubtful onion, then issue a report that cannot be changed secretly.'
 },
 hi: {
+  q_small: 'फ़ोटो छोटी है। पास जाकर सामान्य कैमरे से लें।', q_blur: 'फ़ोटो धुंधली है। फ़ोन स्थिर रखें और फ़ोकस के लिए स्क्रीन पर टैप करें।', q_dark: 'फ़ोटो बहुत अंधेरी है। ज़्यादा रोशनी में जाएँ।', q_bright: 'फ़ोटो बहुत तेज़ रोशनी वाली है। सीधी धूप से बचें।', q_glare: 'चमक या परछाईं है। कोण बदलें, लैंप और खिड़की से दूर।',
   app_sub: 'प्याज़ गुणवत्ता ग्रेडिंग', lang: 'भाषा',
   nav_grade: 'ग्रेड', nav_report: 'रिपोर्ट', nav_settings: 'सेटिंग',
   step1: 'फ़ोटो लें', step2: 'प्याज़ जाँचें', step3: 'रिपोर्ट जारी करें',
@@ -1250,6 +1252,7 @@ hi: {
   h5: 'आप संदिग्ध प्याज़ जाँचें, फिर ऐसी रिपोर्ट जारी करें जिसे चुपके से बदला न जा सके।'
 },
 mr: {
+  q_small: 'फोटो लहान आहे. जवळ जाऊन सामान्य कॅमेऱ्याने काढा.', q_blur: 'फोटो अस्पष्ट आहे. फोन स्थिर धरा आणि फोकससाठी स्क्रीनवर टॅप करा.', q_dark: 'फोटो खूप अंधारा आहे. जास्त उजेडात जा.', q_bright: 'फोटो खूप प्रखर आहे. थेट सूर्यप्रकाश टाळा.', q_glare: 'चकाकी आहे. कोन बदला, दिवा आणि खिडकीपासून दूर.',
   app_sub: 'कांदा गुणवत्ता प्रतवारी', lang: 'भाषा',
   nav_grade: 'प्रतवारी', nav_report: 'अहवाल', nav_settings: 'सेटिंग',
   step1: 'फोटो काढा', step2: 'कांदे तपासा', step3: 'अहवाल द्या',
@@ -1296,6 +1299,7 @@ mr: {
   h5: 'तुम्ही शंकास्पद कांदे तपासा, मग गुपचूप बदलता न येणारा अहवाल द्या.'
 },
 gu: {
+  q_small: 'ફોટો નાનો છે. નજીક જઈને સામાન્ય કેમેરાથી લો.', q_blur: 'ફોટો ધૂંધળો છે. ફોન સ્થિર રાખો અને ફોકસ માટે સ્ક્રીન પર ટૅપ કરો.', q_dark: 'ફોટો ખૂબ અંધારો છે. વધુ પ્રકાશમાં જાઓ.', q_bright: 'ફોટો ખૂબ તેજસ્વી છે. સીધો સૂર્યપ્રકાશ ટાળો.', q_glare: 'ચમક છે. કોણ બદલો, દીવા અને બારીથી દૂર.',
   app_sub: 'ડુંગળી ગુણવત્તા ગ્રેડિંગ', lang: 'ભાષા',
   nav_grade: 'ગ્રેડ', nav_report: 'રિપોર્ટ', nav_settings: 'સેટિંગ',
   step1: 'ફોટો લો', step2: 'ડુંગળી તપાસો', step3: 'રિપોર્ટ આપો',
@@ -1342,6 +1346,7 @@ gu: {
   h5: 'તમે શંકાસ્પદ ડુંગળી તપાસો, પછી છાનોમાનો ન બદલી શકાય એવો રિપોર્ટ આપો.'
 },
 ta: {
+  q_small: 'படம் சிறியது. அருகில் சென்று சாதாரண கேமராவில் எடுக்கவும்.', q_blur: 'படம் மங்கலாக உள்ளது. தொலைபேசியை அசையாமல் பிடித்து, கவனம் செலுத்த திரையைத் தட்டவும்.', q_dark: 'படம் மிகவும் இருட்டாக உள்ளது. நல்ல வெளிச்சத்திற்கு செல்லவும்.', q_bright: 'படம் மிகவும் பிரகாசமாக உள்ளது. நேரடி சூரிய ஒளியைத் தவிர்க்கவும்.', q_glare: 'ஒளிப் பிரதிபலிப்பு உள்ளது. கோணத்தை மாற்றவும்.',
   app_sub: 'வெங்காய தரம் பிரித்தல்', lang: 'மொழி',
   nav_grade: 'தரம்', nav_report: 'அறிக்கை', nav_settings: 'அமைப்பு',
   step1: 'புகைப்படம் எடு', step2: 'வெங்காயம் சரிபார்', step3: 'அறிக்கை வழங்கு',
@@ -1388,6 +1393,7 @@ ta: {
   h5: 'சந்தேகமான வெங்காயங்களை நீங்கள் சரிபார்த்து, ரகசியமாக மாற்ற முடியாத அறிக்கையை வழங்குங்கள்.'
 },
 te: {
+  q_small: 'ఫోటో చిన్నదిగా ఉంది. దగ్గరగా వెళ్లి సాధారణ కెమెరాతో తీయండి.', q_blur: 'ఫోటో మసకగా ఉంది. ఫోన్‌ను స్థిరంగా పట్టుకుని, ఫోకస్ కోసం స్క్రీన్‌పై తట్టండి.', q_dark: 'ఫోటో చాలా చీకటిగా ఉంది. ఎక్కువ వెలుతురులోకి వెళ్లండి.', q_bright: 'ఫోటో చాలా ప్రకాశంగా ఉంది. నేరుగా ఎండను నివారించండి.', q_glare: 'మెరుపు ఉంది. కోణాన్ని మార్చండి.',
   app_sub: 'ఉల్లిపాయ నాణ్యత గ్రేడింగ్', lang: 'భాష',
   nav_grade: 'గ్రేడ్', nav_report: 'నివేదిక', nav_settings: 'సెట్టింగ్‌లు',
   step1: 'ఫోటో తీయండి', step2: 'ఉల్లిపాయలు చూడండి', step3: 'నివేదిక ఇవ్వండి',
@@ -1434,6 +1440,7 @@ te: {
   h5: 'అనుమానాస్పద ఉల్లిపాయలను మీరు పరిశీలించి, రహస్యంగా మార్చలేని నివేదికను ఇవ్వండి.'
 },
 kn: {
+  q_small: 'ಫೋಟೋ ಚಿಕ್ಕದಾಗಿದೆ. ಹತ್ತಿರ ಹೋಗಿ ಸಾಮಾನ್ಯ ಕ್ಯಾಮೆರಾದಿಂದ ತೆಗೆಯಿರಿ.', q_blur: 'ಫೋಟೋ ಮಸುಕಾಗಿದೆ. ಫೋನ್ ಸ್ಥಿರವಾಗಿ ಹಿಡಿದು, ಫೋಕಸ್‌ಗಾಗಿ ಪರದೆಯನ್ನು ತಟ್ಟಿ.', q_dark: 'ಫೋಟೋ ತುಂಬಾ ಕತ್ತಲಾಗಿದೆ. ಹೆಚ್ಚು ಬೆಳಕಿಗೆ ಹೋಗಿ.', q_bright: 'ಫೋಟೋ ತುಂಬಾ ಪ್ರಕಾಶಮಾನವಾಗಿದೆ. ನೇರ ಬಿಸಿಲನ್ನು ತಪ್ಪಿಸಿ.', q_glare: 'ಹೊಳಪು ಇದೆ. ಕೋನವನ್ನು ಬದಲಿಸಿ.',
   app_sub: 'ಈರುಳ್ಳಿ ಗುಣಮಟ್ಟ ಶ್ರೇಣೀಕರಣ', lang: 'ಭಾಷೆ',
   nav_grade: 'ಶ್ರೇಣಿ', nav_report: 'ವರದಿ', nav_settings: 'ಸೆಟ್ಟಿಂಗ್',
   step1: 'ಫೋಟೋ ತೆಗೆಯಿರಿ', step2: 'ಈರುಳ್ಳಿ ಪರಿಶೀಲಿಸಿ', step3: 'ವರದಿ ನೀಡಿ',
@@ -1767,6 +1774,44 @@ $('btnCard').onclick = () => {
 };
 
 /* ---------- grade screen ---------- */
+/* ---------- photo quality gate ----------
+   Warns the officer about a photo that is too poor to trust BEFORE they rely on the result.
+   Thresholds are starting values; they have not been tuned on real procurement-centre photos. */
+const QUALITY = {minSidePx: 800, minSharpness: 60, darkBelow: 60, brightAbove: 215, maxGlareShare: 0.08};
+function photoQuality() {
+  const src = state.img; if (!src) return null;
+  // resample to a fixed 800 px width so sharpness is comparable between phones
+  const w0 = src.width, h0 = src.height, W = 800, H = Math.max(1, Math.round(h0 * W / w0));
+  const a = document.createElement('canvas'); a.width = w0; a.height = h0;
+  a.getContext('2d').putImageData(src, 0, 0);
+  const b = document.createElement('canvas'); b.width = W; b.height = H;
+  const bx = b.getContext('2d'); bx.drawImage(a, 0, 0, W, H);
+  const d = bx.getImageData(0, 0, W, H).data;
+  const g = new Float32Array(W * H);
+  let sum = 0;
+  for (let i = 0, j = 0; j < g.length; i += 4, j++) { g[j] = 0.114 * d[i] + 0.587 * d[i + 1] + 0.299 * d[i + 2]; sum += g[j]; }
+  const mean = sum / g.length;
+  let ls = 0, lss = 0, n = 0;
+  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
+    const k = y * W + x;
+    const l = g[k - 1] + g[k + 1] + g[k - W] + g[k + W] - 4 * g[k];
+    ls += l; lss += l * l; n++;
+  }
+  const sharp = n ? lss / n - (ls / n) * (ls / n) : 0;
+  const p = state.img.data; let glare = 0;
+  for (let i = 0; i < p.length; i += 4) if (p[i] >= 250 && p[i + 1] >= 250 && p[i + 2] >= 250) glare++;
+  const glareShare = glare / (p.length / 4);
+  const warn = [];
+  if (Math.min(state.origW || w0, state.origH || h0) < QUALITY.minSidePx) warn.push('q_small');
+  const dark = mean < QUALITY.darkBelow, bright = mean > QUALITY.brightAbove;
+  // a very dark or washed-out photo also has low detail, so report the cause, not "blurred" as well
+  if (sharp < QUALITY.minSharpness && !dark && !bright) warn.push('q_blur');
+  if (dark) warn.push('q_dark');
+  if (bright) warn.push('q_bright');
+  if (glareShare > QUALITY.maxGlareShare) warn.push('q_glare');
+  return {sharpness: +sharp.toFixed(1), brightness: +mean.toFixed(1), glareShare: +glareShare.toFixed(4),
+          widthPx: state.origW || w0, heightPx: state.origH || h0, warn};
+}
 function renderScan() {
   const res = state.result;
   renderSteps();
@@ -1780,6 +1825,7 @@ function renderScan() {
   $('kpis').innerHTML = GRADES.map(k => `<div class="tile k-${GRADE_KEY[k]}"><b>${s.pct[k].toFixed(0)}%</b><span>${esc(gName(k))}</span><small class="num">${s[k]} / ${s.count}</small></div>`).join('');
   const b = [];
   if (res.scaleSource === 'none') b.push(banner('bad', esc(t('scale_missing'))));
+  if (!syn) { const q = photoQuality(); state.quality = q; if (q) q.warn.forEach(k => b.push(banner('warn', esc(t(k))))); }
   b.push(s.Review ? banner('warn', esc(t('need_check', {n: s.Review}))) : banner('ok', esc(t('all_checked'))));
   $('banners').innerHTML = b.join('');
   // doubtful onions first, then by number
